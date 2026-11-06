@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../widgets/logout_dialog.dart';
+import 'profil_admin.dart';
+import 'data_siswa.dart';
+import 'data_guru.dart';
+import 'kategori_portofolio.dart';
 
 class DashboardAdmin extends StatefulWidget {
   const DashboardAdmin({super.key});
@@ -15,12 +20,12 @@ class _DashboardAdminState extends State<DashboardAdmin> {
   int selectedMenu = 0;
   String selectedPeriod = 'This Month';
 
+  // MENU SIDEBAR (VERIFIKASI & AKTIVITAS TERBARU DIHAPUS)
   final List<Map<String, dynamic>> menuItems = [
     {'icon': Icons.home_rounded, 'title': 'Home'},
     {'icon': Icons.school_rounded, 'title': 'Data Guru'},
     {'icon': Icons.people_alt_rounded, 'title': 'Data Siswa'},
-    {'icon': Icons.folder_rounded, 'title': 'Portofolio'},
-    {'icon': Icons.verified_user_rounded, 'title': 'Verifikasi'},
+    {'icon': Icons.assignment_outlined, 'title': 'Kategori'},
     {'icon': Icons.notifications_rounded, 'title': 'Notification'},
     {'icon': Icons.person_rounded, 'title': 'My Profile'},
   ];
@@ -216,50 +221,19 @@ class _DashboardAdminState extends State<DashboardAdmin> {
 
               const SizedBox(height: 24),
 
-              // PENGAJUAN MENUNGGU VERIFIKASI
-              _buildSectionTitle('Pengajuan Menunggu Verifikasi', 'Lihat Semua'),
-              const SizedBox(height: 10),
-
-              _buildVerificationCard(
-                'Balqis Demes Piscesa',
-                'XII RPL B',
-                'Juara 1 Lomba Web Design',
-                '2 Jam yang lalu',
-                'Menunggu',
-              ),
-              const SizedBox(height: 10),
-              _buildVerificationCard(
-                'Ahmad Fauzan',
-                'XII RPL A',
-                'Sertifikat Flutter Developer',
-                '5 Jam yang lalu',
-                'Menunggu',
-              ),
+              // SECTION 1: MENU AKSI CEPAT (QUICK ACTIONS ADMIN)
+              _buildSectionTitle('Menu Aksi Cepat'),
+              const SizedBox(height: 12),
+              _buildQuickActions(),
 
               const SizedBox(height: 24),
 
-              // AKTIVITAS TERBARU
-              _buildSectionTitle('Aktivitas Terbaru', 'Lihat Semua'),
-              const SizedBox(height: 10),
+              // SECTION 2: STATISTIK KEAKTIFAN JURUSAN & KELAS
+              _buildSectionTitle('Keaktifan Jurusan & Kelas'),
+              const SizedBox(height: 12),
+              _buildKeaktifanJurusanDanKelas(),
 
-              _buildActivityCard(
-                'Budi Santoso',
-                'XII RPL B',
-                'Mengunggah Sertifikat TOEFL',
-                '4 Jam yang lalu',
-              ),
-              _buildActivityCard(
-                'Siti Rahmawati',
-                'XI RPL A',
-                'Memperbarui Portofolio Proyek',
-                '6 Jam yang lalu',
-              ),
-              _buildActivityCard(
-                'Rizky Pratama',
-                'XII RPL C',
-                'Mengunggah Piagam Penghargaan',
-                '1 Hari yang lalu',
-              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -290,58 +264,71 @@ class _DashboardAdminState extends State<DashboardAdmin> {
               padding: const EdgeInsets.only(left: 18, right: 10, top: 8),
               child: Row(
                 children: [
-                  // AVATAR DENGAN BORDER PUTIH
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x33000000),
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const CircleAvatar(
-                      radius: 26,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.person,
-                        size: 32,
-                        color: primaryBlue,
+                  // AVATAR & NAMA ADMIN BISA DIKLIK KE PROFIL
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        Navigator.pop(context); // Tutup drawer
+                        Navigator.pushNamed(context, '/profil-admin');
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x33000000),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const CircleAvatar(
+                              radius: 26,
+                              backgroundColor: Colors.white,
+                              child: Icon(
+                                Icons.person,
+                                size: 32,
+                                color: primaryBlue,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          // NAMA DAN EMAIL ADMIN
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Rlexandra',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'rlexandra@gmail.com',
+                                  style: TextStyle(
+                                    color: Color(0xFF7DD3FC), // Cyan muda
+                                    fontSize: 11,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  // NAMA DAN EMAIL ADMIN
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Rlexandra',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          'rlexandra@gmail.com',
-                          style: TextStyle(
-                            color: Color(0xFF7DD3FC), // Cyan muda
-                            fontSize: 11,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
                     ),
                   ),
 
@@ -394,21 +381,48 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        setState(() {
-                          selectedMenu = index;
-                        });
-                        Navigator.pop(context); // Tutup drawer setelah memilih
+                      
+                    onTap: () {
+  setState(() {
+    selectedMenu = index;
+  });
 
-                        if (index != 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Menu ${item['title']} dipilih'),
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
-                        }
-                      },
+  Navigator.pop(context);
+
+  if (item['title'] == 'Data Guru') {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DataGuru(),
+      ),
+    );
+
+  } else if (item['title'] == 'Data Siswa') {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DataSiswa(),
+      ),
+    );
+
+  } else if (item['title'] == 'Kategori') {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const KategoriPortofolio(),
+      ),
+    );
+
+  } else if (item['title'] == 'My Profile') {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ProfilAdmin(),
+      ),
+    );
+  }
+},
+
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -466,11 +480,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/login',
-                    (route) => false,
-                  );
+                  LogoutDialog.show(context, role: 'admin');
                 },
                 child: const Padding(
                   padding: EdgeInsets.symmetric(
@@ -579,127 +589,272 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     );
   }
 
-  // JUDUL SECTION
-  Widget _buildSectionTitle(String title, String action) {
+  // JUDUL SECTION (BERSIH TANPA TOMBOL DI KANAN)
+  Widget _buildSectionTitle(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF1E293B),
+          letterSpacing: -0.2,
+        ),
+      ),
+    );
+  }
+
+  // 1. MENU AKSI CEPAT (LEBIH RAPI & PROPORSIONAL)
+  Widget _buildQuickActions() {
     return Row(
       children: [
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
-            ),
-          ),
-        ),
-        InkWell(
+        _buildQuickActionItem(
+          icon: Icons.person_add_alt_1_rounded,
+          title: 'Tambah Siswa',
+          bgColor: const Color(0xFFEFF6FF),
+          iconColor: const Color(0xFF2563EB),
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$action belum tersedia')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DataSiswa()),
             );
           },
-          child: Row(
-            children: [
-              Text(
-                action,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: primaryBlue,
-                ),
-              ),
-              const Icon(Icons.chevron_right, size: 18, color: primaryBlue),
-            ],
-          ),
+        ),
+        const SizedBox(width: 10),
+        _buildQuickActionItem(
+          icon: Icons.school_rounded,
+          title: 'Tambah Guru',
+          bgColor: const Color(0xFFF0FDF4),
+          iconColor: const Color(0xFF16A34A),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DataGuru()),
+            );
+          },
+        ),
+        const SizedBox(width: 10),
+        _buildQuickActionItem(
+          icon: Icons.category_rounded,
+          title: 'Kategori',
+          bgColor: const Color(0xFFFAF5FF),
+          iconColor: const Color(0xFF9333EA),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const KategoriPortofolio()),
+            );
+          },
         ),
       ],
     );
   }
 
-  // KARTU PENGAJUAN VERIFIKASI
-  Widget _buildVerificationCard(
-    String name,
-    String kelas,
-    String description,
-    String time,
-    String status,
-  ) {
+  Widget _buildQuickActionItem({
+    required IconData icon,
+    required String title,
+    required Color bgColor,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x05000000),
+                blurRadius: 6,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 2. STATISTIK KEAKTIFAN JURUSAN & KELAS (LEBIH RAPI & PADAT)
+  Widget _buildKeaktifanJurusanDanKelas() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0A000000),
+            color: Color(0x05000000),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(
-            radius: 20,
-            backgroundColor: Color(0x1A254BD1),
-            child: Icon(Icons.person, color: primaryBlue, size: 24),
+          // SUBJUDUL JURUSAN
+          const Text(
+            'Perbandingan Portofolio per Jurusan',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF334155),
+            ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                      color: Color(0xFF1E293B),
-                      fontSize: 12,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text: ' ($kelas)',
-                        style: const TextStyle(color: Color(0xFF64748B)),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  description,
+          const SizedBox(height: 10),
+
+          // JURUSAN RPL
+          _buildJurusanProgressBar(
+            jurusan: 'Rekayasa Perangkat Lunak (RPL)',
+            icon: Icons.code_rounded,
+            count: '98 Portofolio',
+            percent: 0.65,
+            color: primaryBlue,
+            bgColor: const Color(0x1F254BD1),
+          ),
+
+          const SizedBox(height: 8),
+
+          // JURUSAN TKJ
+          _buildJurusanProgressBar(
+            jurusan: 'Teknik Komputer & Jaringan (TKJ)',
+            icon: Icons.router_rounded,
+            count: '52 Portofolio',
+            percent: 0.35,
+            color: const Color(0xFF0D9488),
+            bgColor: const Color(0x1F0D9488),
+          ),
+
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(color: Color(0xFFE2E8F0), height: 1),
+          ),
+
+          // SUBJUDUL TOP KELAS TERAKTIF
+          const Text(
+            'Top 3 Kelas Teraktif',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF334155),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // LIST KELAS TERAKTIF (LEBIH RAPI)
+          _buildKelasLeaderboardItem(
+            rank: '1',
+            kelas: 'XII RPL B',
+            total: '48 Portofolio',
+            badgeColor: const Color(0xFFFEF3C7),
+            textColor: const Color(0xFFD97706),
+          ),
+          const SizedBox(height: 6),
+          _buildKelasLeaderboardItem(
+            rank: '2',
+            kelas: 'XI RPL A',
+            total: '32 Portofolio',
+            badgeColor: const Color(0xFFF1F5F9),
+            textColor: const Color(0xFF64748B),
+          ),
+          const SizedBox(height: 6),
+          _buildKelasLeaderboardItem(
+            rank: '3',
+            kelas: 'XII TKJ A',
+            total: '28 Portofolio',
+            badgeColor: const Color(0xFFFFEDD5),
+            textColor: const Color(0xFFC2410C),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJurusanProgressBar({
+    required String jurusan,
+    required IconData icon,
+    required String count,
+    required double percent,
+    required Color color,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 15, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  jurusan,
                   style: const TextStyle(
                     fontSize: 11,
-                    color: Color(0xFF475569),
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1E293B),
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Color(0xFF94A3B8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEE2E2),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              status,
-              style: const TextStyle(
-                color: Color(0xFFEF4444),
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
               ),
+              Text(
+                count,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: percent,
+              minHeight: 5,
+              backgroundColor: bgColor,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
         ],
@@ -707,74 +862,56 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     );
   }
 
-  // KARTU AKTIVITAS TERBARU
-  Widget _buildActivityCard(
-    String name,
-    String kelas,
-    String activity,
-    String time,
-  ) {
+  Widget _buildKelasLeaderboardItem({
+    required String rank,
+    required String kelas,
+    required String total,
+    required Color badgeColor,
+    required Color textColor,
+  }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 17,
-            backgroundColor: Color(0xFFEFF6FF),
-            child: Icon(Icons.person_outline, color: primaryBlue, size: 20),
+          Container(
+            width: 24,
+            height: 24,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: badgeColor,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '#$rank',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                      color: Color(0xFF1E293B),
-                      fontSize: 11,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text: ' ($kelas)',
-                        style: const TextStyle(color: Color(0xFF64748B)),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  activity,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Color(0xFF475569),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    color: Color(0xFF94A3B8),
-                  ),
-                ),
-              ],
+            child: Text(
+              kelas,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+          ),
+          Text(
+            total,
+            style: const TextStyle(
+              fontSize: 10.5,
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

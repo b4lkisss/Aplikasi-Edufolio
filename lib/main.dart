@@ -5,8 +5,14 @@ import 'screens/splash_screen.dart';
 import 'screens/admin/login_admin.dart';
 import 'screens/admin/dashboard_admin.dart';
 import 'screens/admin/profil_admin.dart';
+import 'screens/admin/data_guru.dart';
+import 'screens/admin/data_siswa.dart';
 import 'screens/siswa/login_siswa.dart';
 import 'screens/guru/login_guru.dart';
+import 'screens/guru/dashboard_guru.dart';
+import 'screens/guru/profil_guru.dart';
+import 'screens/guru/data_siswa_guru.dart';
+import 'screens/guru/verifikasi_portofolio_guru.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,8 +43,14 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginAdmin(),
         '/dashboard-admin': (context) => const DashboardAdmin(),
         '/profil-admin': (context) => const ProfilAdmin(),
+        '/data-guru': (context) => const DataGuru(),
+        '/data-siswa': (context) => const DataSiswa(),
         '/login-siswa': (context) => const LoginSiswa(),    
-        '/login-guru' :(context) => const LoginGuru(),  
+        '/login-guru': (context) => const LoginGuru(),
+        '/dashboard-guru': (context) => const DashboardGuru(),
+        '/profil-guru': (context) => const ProfilGuru(),
+        '/data-siswa-guru': (context) => const DataSiswaGuru(),
+        '/verifikasi-portofolio-guru': (context) => const VerifikasiPortofolioGuru(),
       },
     );
   }

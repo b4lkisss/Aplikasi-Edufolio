@@ -1,4 +1,6 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../services/image_picker_service.dart';
 
 class ProfilAdmin extends StatefulWidget {
   const ProfilAdmin({super.key});
@@ -8,20 +10,98 @@ class ProfilAdmin extends StatefulWidget {
 }
 
 class _ProfilAdminState extends State<ProfilAdmin> {
-  final namaController = TextEditingController(text: 'Andi Ardiansyah');
-  final emailController = TextEditingController(text: 'ardi@gmail.com');
-  final tanggalLahirController = TextEditingController(text: '13-04-2007');
-  final jenisKelaminController = TextEditingController(text: 'Laki-laki');
-  final noTelponController = TextEditingController(text: '3740249284649');
+  // Controller form
+  final TextEditingController namaController =
+      TextEditingController(text: 'Andi Ardiansyah');
+  final TextEditingController emailController =
+      TextEditingController(text: 'ardi@gmail.com');
+  final TextEditingController tanggalLahirController =
+      TextEditingController(text: '13-04-2007');
+  final TextEditingController noTelponController =
+      TextEditingController(text: '3740249284649');
+
+  // State untuk tanggal lahir
+  DateTime selectedDate = DateTime(2007, 4, 13);
+
+  // State untuk jenis kelamin dropdown
+  String selectedJenisKelamin = 'laki-laki';
+  final List<String> opsiJenisKelamin = ['laki-laki', 'perempuan'];
+
+  // State untuk foto profil yang dipilih
+  Uint8List? fotoBytes;
+
+  final Color fieldColor = const Color(0xFFD9D9D9); // Warna abu-abu field sesuai gambar
 
   @override
   void dispose() {
     namaController.dispose();
     emailController.dispose();
     tanggalLahirController.dispose();
-    jenisKelaminController.dispose();
     noTelponController.dispose();
     super.dispose();
+  }
+
+  // FUNGSI 1: DATEPICKER UNTUK TANGGAL LAHIR
+  Future<void> _pilihTanggalLahir() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(1960),
+      lastDate: DateTime.now(),
+      helpText: 'Pilih Tanggal Lahir',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF254BD1),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+        final day = picked.day.toString().padLeft(2, '0');
+        final month = picked.month.toString().padLeft(2, '0');
+        tanggalLahirController.text = '$day-$month-${picked.year}';
+      });
+    }
+  }
+
+  // FUNGSI 2: PICKER FOTO PROFIL (MEMBUKA FILE EXPLORER)
+  Future<void> _pilihFoto() async {
+    final bytes = await AppImagePicker.pickImage();
+    if (bytes != null) {
+      setState(() {
+        fotoBytes = bytes;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Foto profil berhasil diubah!'),
+          backgroundColor: Color(0xFF254BD1),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  // FUNGSI SIMPAN PROFIL
+  void _simpanProfil() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profil Admin berhasil disimpan!'),
+        backgroundColor: Color(0xFF254BD1),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -31,12 +111,12 @@ class _ProfilAdminState extends State<ProfilAdmin> {
       body: SafeArea(
         child: Column(
           children: [
-            // HEADER: Tombol Kembali + Judul + Tombol Simpan
+            // HEADER ATAS: TOMBOL KEMBALI + JUDUL + TOMBOL SIMPAN
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  // Tombol Kembali
+                  // Tombol Panah Kembali
                   InkWell(
                     borderRadius: BorderRadius.circular(8),
                     onTap: () {
@@ -47,117 +127,138 @@ class _ProfilAdminState extends State<ProfilAdmin> {
                       child: Icon(
                         Icons.arrow_back,
                         size: 24,
-                        color: Color(0xFF1E293B),
+                        color: Colors.black,
                       ),
                     ),
                   ),
 
                   const SizedBox(width: 8),
 
-                  // Judul
+                  // Judul Halaman
                   const Expanded(
                     child: Text(
                       'Profil Admin',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
+                        color: Colors.black,
                       ),
                     ),
                   ),
 
-                  // Tombol Simpan
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Profil berhasil disimpan!'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.save_rounded, size: 18),
-                    label: const Text(
-                      'Simpan',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1E293B),
-                      foregroundColor: Colors.white,
+                  // Tombol Simpan Abu-Abu
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _simpanProfil,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      decoration: BoxDecoration(
+                        color: fieldColor,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      elevation: 0,
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.bookmark,
+                            size: 16,
+                            color: Colors.black,
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            'Simpan',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // KONTEN PROFIL (SCROLLABLE)
+            // KONTEN FORM (SCROLLABLE)
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
 
-                    // FOTO PROFIL DI TENGAH
+                    // FOTO PROFIL DI TENGAH (BISA DIKLIK UNTUK MEMILIH FOTO DARI FILE EXPLORER)
                     Center(
                       child: Stack(
                         children: [
-                          Container(
-                            width: 110,
-                            height: 110,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFFE2E8F0),
-                                width: 3,
+                          InkWell(
+                            borderRadius: BorderRadius.circular(60),
+                            onTap: _pilihFoto,
+                            child: Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFFCBD5E1),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x1A000000),
+                                    blurRadius: 10,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              color: const Color(0xFFF1F5F9),
-                            ),
-                            child: const CircleAvatar(
-                              radius: 52,
-                              backgroundColor: Color(0xFFF1F5F9),
-                              child: Icon(
-                                Icons.person,
-                                size: 56,
-                                color: Color(0xFF94A3B8),
+                              child: ClipOval(
+                                child: fotoBytes != null
+                                    ? Image.memory(
+                                        fotoBytes!,
+                                        width: 120,
+                                        height: 120,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : const Icon(
+                                        Icons.person,
+                                        size: 75,
+                                        color: Colors.white,
+                                      ),
                               ),
                             ),
                           ),
 
-                          // Tombol edit foto kecil di pojok kanan bawah
+                          // Tombol Kamera Kecil di Pojok Kanan Bawah
                           Positioned(
-                            bottom: 0,
-                            right: 0,
+                            bottom: 2,
+                            right: 2,
                             child: InkWell(
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Ganti foto belum tersedia'),
-                                  ),
-                                );
-                              },
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: _pilihFoto,
                               child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF1E293B),
+                                padding: const EdgeInsets.all(7),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF254BD1),
                                   shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x26000000),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
                                 child: const Icon(
                                   Icons.camera_alt_rounded,
-                                  size: 16,
                                   color: Colors.white,
+                                  size: 15,
                                 ),
                               ),
                             ),
@@ -166,42 +267,32 @@ class _ProfilAdminState extends State<ProfilAdmin> {
                       ),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 30),
 
-                    // FORM FIELD: Nama Lengkap
-                    _buildFieldLabel('Nama Lengkap'),
-                    const SizedBox(height: 6),
-                    _buildTextField(namaController),
+                    // 1. NAMA LENGKAP
+                    _buildFieldGroup('Nama Lengkap', namaController),
 
-                    const SizedBox(height: 20),
+                    // 2. EMAIL
+                    _buildFieldGroup(
+                      'Email',
+                      emailController,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
 
-                    // FORM FIELD: Email
-                    _buildFieldLabel('Email'),
-                    const SizedBox(height: 6),
-                    _buildTextField(emailController),
+                    // 3. TANGGAL LAHIR (DENGAN DATE PICKER)
+                    _buildDatePickerField('Tanggal Lahir'),
 
-                    const SizedBox(height: 20),
+                    // 4. JENIS KELAMIN (DENGAN DROPDOWN)
+                    _buildDropdownJenisKelamin('Jenis Kelamin'),
 
-                    // FORM FIELD: Tanggal Lahir
-                    _buildFieldLabel('Tanggal Lahir'),
-                    const SizedBox(height: 6),
-                    _buildTextField(tanggalLahirController),
+                    // 5. NO TELPON
+                    _buildFieldGroup(
+                      'No Telpon',
+                      noTelponController,
+                      keyboardType: TextInputType.phone,
+                    ),
 
-                    const SizedBox(height: 20),
-
-                    // FORM FIELD: Jenis Kelamin
-                    _buildFieldLabel('Jenis Kelamin'),
-                    const SizedBox(height: 6),
-                    _buildTextField(jenisKelaminController),
-
-                    const SizedBox(height: 20),
-
-                    // FORM FIELD: No Telpon
-                    _buildFieldLabel('No Telpon'),
-                    const SizedBox(height: 6),
-                    _buildTextField(noTelponController),
-
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -212,50 +303,162 @@ class _ProfilAdminState extends State<ProfilAdmin> {
     );
   }
 
-  // LABEL FIELD
-  Widget _buildFieldLabel(String label) {
-    return Text(
-      label,
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF1E293B),
+  // WIDGET STANDARD TEXT FIELD
+  Widget _buildFieldGroup(
+    String label,
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: fieldColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.centerLeft,
+            child: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF475569),
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // TEXT FIELD DENGAN STYLE ABU-ABU ROUNDED
-  Widget _buildTextField(TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      style: const TextStyle(
-        fontSize: 14,
-        color: Color(0xFF64748B),
-      ),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: const Color(0xFFF1F5F9),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: Color(0xFF254BD1),
-            width: 1.5,
+  // WIDGET TANGGAL LAHIR (DATEPICKER)
+  Widget _buildDatePickerField(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
-        ),
+          const SizedBox(height: 8),
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: _pilihTanggalLahir,
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: fieldColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      tanggalLahirController.text,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF475569),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 18,
+                    color: Color(0xFF64748B),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // WIDGET JENIS KELAMIN (DROPDOWN)
+  Widget _buildDropdownJenisKelamin(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: fieldColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedJenisKelamin,
+                isExpanded: true,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Color(0xFF64748B),
+                ),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF475569),
+                  fontWeight: FontWeight.w500,
+                ),
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                items: opsiJenisKelamin.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      selectedJenisKelamin = newValue;
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-

@@ -156,7 +156,10 @@ class _LoginGuruState extends State<LoginGuru> {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Login akan dihubungkan ke Supabase
+                      Navigator.pushReplacementNamed(
+                        context,
+                        '/dashboard-guru',
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF356DA8),
@@ -222,6 +225,40 @@ class _LoginGuruState extends State<LoginGuru> {
                       ],
                     ),
                   ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // PILIHAN LOGIN SEBAGAI ADMIN / SISWA
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushReplacementNamed(context, '/login'),
+                      child: const Text(
+                        'Masuk sebagai Admin',
+                        style: TextStyle(
+                          color: Color(0xFF356DA8),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    const Text('•', style: TextStyle(color: Colors.grey)),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushReplacementNamed(context, '/login-siswa'),
+                      child: const Text(
+                        'Masuk sebagai Siswa',
+                        style: TextStyle(
+                          color: Color(0xFF356DA8),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

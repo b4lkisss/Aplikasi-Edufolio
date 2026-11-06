@@ -223,6 +223,40 @@ class _LoginAdminState extends State<LoginAdmin> {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 18),
+
+                // PILIHAN LOGIN SEBAGAI GURU / SISWA
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushReplacementNamed(context, '/login-guru'),
+                      child: const Text(
+                        'Masuk sebagai Guru',
+                        style: TextStyle(
+                          color: Color(0xFF356DA8),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    const Text('•', style: TextStyle(color: Colors.grey)),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushReplacementNamed(context, '/login-siswa'),
+                      child: const Text(
+                        'Masuk sebagai Siswa',
+                        style: TextStyle(
+                          color: Color(0xFF356DA8),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
