@@ -241,7 +241,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     );
   }
 
-  // WIDGET CUSTOM DRAWER / SIDEBAR (PERSIS SEPERTI GAMBAR)
+  // WIDGET CUSTOM DRAWER / SIDEBAR (DISAMAKAN WARNANYA DENGAN ROLE SISWA)
   Widget _buildCustomDrawer(BuildContext context) {
     final drawerWidth = MediaQuery.of(context).size.width * 0.76;
 
@@ -253,265 +253,246 @@ class _DashboardAdminState extends State<DashboardAdmin> {
           bottomRight: Radius.circular(32),
         ),
       ),
-      backgroundColor: primaryBlue,
-      child: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-
-            // HEADER PROFIL DENGAN TOMBOL PANAH MENUTUP DI SEBELAH KANAN
-            Padding(
-              padding: const EdgeInsets.only(left: 18, right: 10, top: 8),
-              child: Row(
-                children: [
-                  // AVATAR & NAMA ADMIN BISA DIKLIK KE PROFIL
-                  Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        Navigator.pop(context); // Tutup drawer
-                        Navigator.pushNamed(context, '/profil-admin');
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x33000000),
-                                  blurRadius: 6,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const CircleAvatar(
-                              radius: 26,
-                              backgroundColor: Colors.white,
-                              child: Icon(
-                                Icons.person,
-                                size: 32,
-                                color: primaryBlue,
+      backgroundColor: Colors.white,
+      child: Column(
+        children: [
+          // HEADER PROFIL DENGAN WARNA BIRU SESUAI ROLE SISWA
+          Container(
+            padding: const EdgeInsets.fromLTRB(18, 50, 10, 20),
+            color: primaryBlue,
+            child: Row(
+              children: [
+                // AVATAR & NAMA ADMIN BISA DIKLIK KE PROFIL
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      Navigator.pop(context); // Tutup drawer
+                      Navigator.pushNamed(context, '/profil-admin');
+                    },
+                    child: Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x33000000),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
                               ),
+                            ],
+                          ),
+                          child: const CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Colors.white,
+                            child: Icon(
+                              Icons.person,
+                              size: 30,
+                              color: primaryBlue,
                             ),
                           ),
+                        ),
 
-                          const SizedBox(width: 12),
+                        const SizedBox(width: 12),
 
-                          // NAMA DAN EMAIL ADMIN
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Rlexandra',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                        // NAMA DAN EMAIL ADMIN
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Admin Edufolio',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'rlexandra@gmail.com',
-                                  style: TextStyle(
-                                    color: Color(0xFF7DD3FC), // Cyan muda
-                                    fontSize: 11,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'admin@edufolio.com',
+                                style: TextStyle(
+                                  color: Color(0xFFBAE6FD),
+                                  fontSize: 12,
                                 ),
-                              ],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // TOMBOL CHEVRON / PANAH UNTUK MENUTUP SIDEBAR
+                InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () {
+                    Navigator.pop(context); // Tutup drawer
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Color(0x33FFFFFF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.chevron_left_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // DAFTAR MENU DENGAN LATAR PUTIH
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: menuItems.length,
+              itemBuilder: (context, index) {
+                final item = menuItems[index];
+                final isSelected = selectedMenu == index;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      setState(() {
+                        selectedMenu = index;
+                      });
+
+                      Navigator.pop(context);
+
+                      if (item['title'] == 'Data Guru') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DataGuru(),
+                          ),
+                        );
+                      } else if (item['title'] == 'Data Siswa') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DataSiswa(),
+                          ),
+                        );
+                      } else if (item['title'] == 'Kategori') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const KategoriPortofolio(),
+                          ),
+                        );
+                      } else if (item['title'] == 'My Profile') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfilAdmin(),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0x14254BD1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            item['icon'],
+                            color: isSelected
+                                ? primaryBlue
+                                : const Color(0xFF64748B),
+                            size: 22,
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            item['title'],
+                            style: TextStyle(
+                              color: isSelected
+                                  ? primaryBlue
+                                  : const Color(0xFF1E293B),
+                              fontSize: 14,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
+                );
+              },
+            ),
+          ),
 
-                  // TOMBOL CHEVRON / PANAH UNTUK MENUTUP SIDEBAR (SESUAI GAMBAR)
-                  InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () {
-                      Navigator.pop(context); // Tutup drawer
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Color(0x33FFFFFF),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.chevron_left_rounded,
-                        color: Colors.white,
-                        size: 24,
+          // GARIS PEMISAH SEBELUM LOGOUT
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 18),
+            child: Divider(
+              color: Color(0xFFE2E8F0),
+              thickness: 1,
+            ),
+          ),
+
+          // TOMBOL LOG OUT DI BAGIAN PALING BAWAH
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                LogoutDialog.show(context, role: 'admin');
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.logout_rounded,
+                      color: Colors.red,
+                      size: 22,
+                    ),
+                    SizedBox(width: 16),
+                    Text(
+                      'Log Out',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // GARIS PEMISAH HALUS
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18),
-              child: Divider(
-                color: Color(0x33FFFFFF),
-                thickness: 1,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // DAFTAR MENU
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: menuItems.length,
-                itemBuilder: (context, index) {
-                  final item = menuItems[index];
-                  final isSelected = selectedMenu == index;
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      
-                    onTap: () {
-  setState(() {
-    selectedMenu = index;
-  });
-
-  Navigator.pop(context);
-
-  if (item['title'] == 'Data Guru') {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const DataGuru(),
-      ),
-    );
-
-  } else if (item['title'] == 'Data Siswa') {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const DataSiswa(),
-      ),
-    );
-
-  } else if (item['title'] == 'Kategori') {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const KategoriPortofolio(),
-      ),
-    );
-
-  } else if (item['title'] == 'My Profile') {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ProfilAdmin(),
-      ),
-    );
-  }
-},
-
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0x2EFFFFFF)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            // ICON BERWARNA CYAN SESUAI GAMBAR
-                            Icon(
-                              item['icon'],
-                              color: cyanAccent,
-                              size: 22,
-                            ),
-
-                            const SizedBox(width: 16),
-
-                            // NAMA MENU BERWARNA PUTIH
-                            Text(
-                              item['title'],
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // GARIS PEMISAH SEBELUM LOGOUT
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18),
-              child: Divider(
-                color: Color(0x33FFFFFF),
-                thickness: 1,
-              ),
-            ),
-
-            // TOMBOL LOG OUT DI BAGIAN PALING BAWAH
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  LogoutDialog.show(context, role: 'admin');
-                },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.logout_rounded,
-                        color: cyanAccent,
-                        size: 22,
-                      ),
-                      SizedBox(width: 16),
-                      Text(
-                        'Log Out',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ),
+          ),
 
-            const SizedBox(height: 8),
-          ],
-        ),
+          const SizedBox(height: 8),
+        ],
       ),
     );
   }

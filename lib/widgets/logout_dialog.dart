@@ -127,15 +127,10 @@ class LogoutDialog extends StatelessWidget {
                         if (onLogout != null) {
                           onLogout!();
                         } else {
-                          String route = '/login';
-                          if (role == 'guru') {
-                            route = '/login-guru';
-                          } else if (role == 'siswa') {
-                            route = '/login-siswa';
-                          }
+                          // Semua role logout mengarah ke /login sama seperti admin
                           Navigator.pushNamedAndRemoveUntil(
                             context,
-                            route,
+                            '/login',
                             (r) => false,
                           );
                         }

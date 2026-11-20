@@ -139,10 +139,15 @@ class _DashboardGuruState extends State<DashboardGuru> {
                           fontWeight: FontWeight.w600,
                         ),
                         items: [
+                          'All',
+                          'Today',
+                          'Yesterday',
+                          'This Week',
+                          'Last Week',
                           'This Month',
                           'Last Month',
-                          'This Week',
                           'This Year',
+                          'Last Year',
                         ].map((p) {
                           return DropdownMenuItem(value: p, child: Text(p));
                         }).toList(),
@@ -222,38 +227,38 @@ class _DashboardGuruState extends State<DashboardGuru> {
 
               const SizedBox(height: 18),
 
-              // GRID 4 KARTU STATISTIK (2 X 2)
+              // GRID 4 KARTU STATISTIK (MODEL SAMA PERSIS SEPERTI DI ADMIN)
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-                childAspectRatio: 1.35,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.95,
                 children: [
                   _buildStatCard(
                     icon: Icons.people_alt_rounded,
                     title: 'Total Siswa',
                     value: '32',
-                    iconColor: const Color(0xFF1E293B),
+                    iconColor: const Color(0xFF4F46E5),
                   ),
                   _buildStatCard(
                     icon: Icons.folder_rounded,
                     title: 'Portofolio',
                     value: '150',
-                    iconColor: const Color(0xFF1E293B),
+                    iconColor: const Color(0xFF2563EB),
                   ),
                   _buildStatCard(
                     icon: Icons.emoji_events_rounded,
                     title: 'Prestasi',
                     value: '28',
-                    iconColor: const Color(0xFFF59E0B),
+                    iconColor: const Color(0xFFD97706),
                   ),
                   _buildStatCard(
                     icon: Icons.access_time_filled_rounded,
-                    title: 'Menunggu Verifikasi',
+                    title: 'Menunggu',
                     value: '30',
-                    iconColor: const Color(0xFF1E293B),
+                    iconColor: const Color(0xFF0D9488),
                   ),
                 ],
               ),
@@ -310,51 +315,70 @@ class _DashboardGuruState extends State<DashboardGuru> {
     );
   }
 
-  // WIDGET KARTU STATISTIK (DESAIN PERSIS REFERENSI)
+  // WIDGET KARTU STATISTIK (MODEL SAMA PERSIS SEPERTI DI ADMIN)
   Widget _buildStatCard({
     required IconData icon,
     required String title,
     required String value,
     required Color iconColor,
   }) {
+    final Color badgeBg = Color.fromARGB(
+      30,
+      iconColor.red,
+      iconColor.green,
+      iconColor.blue,
+    );
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Icon(icon, size: 18, color: iconColor),
-              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 20, color: iconColor),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          Center(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 34,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
             ),
           ),
-          const SizedBox(height: 2),
         ],
       ),
     );
@@ -462,18 +486,18 @@ class _DashboardGuruState extends State<DashboardGuru> {
     );
   }
 
-  // SIDEBAR DRAWER GURU
+  // SIDEBAR DRAWER GURU (DISAMAKAN WARNANYA DENGAN ROLE SISWA)
   Widget _buildGuruDrawer() {
     return Drawer(
       child: Container(
-        color: const Color(0xFF1E3A8A),
+        color: Colors.white,
         child: Column(
           children: [
             // HEADER DRAWER DENGAN FOTO PROFIL GURU
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 50, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
               width: double.infinity,
-              color: const Color(0xFF172554),
+              color: primaryBlue,
               child: Row(
                 children: [
                   Container(
@@ -508,7 +532,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
                         Text(
                           'Guru Pembimbing',
                           style: TextStyle(
-                            color: cyanAccent,
+                            color: Color(0xFFBAE6FD),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -530,7 +554,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
                 itemBuilder: (context, index) {
                   final isSelected = selectedMenu == index;
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 3),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () {
@@ -570,12 +594,12 @@ class _DashboardGuruState extends State<DashboardGuru> {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
+                          horizontal: 14,
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0x3338BDF8)
+                              ? const Color(0x14254BD1)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -583,14 +607,18 @@ class _DashboardGuruState extends State<DashboardGuru> {
                           children: [
                             Icon(
                               menuItems[index]['icon'] as IconData,
-                              color: isSelected ? cyanAccent : Colors.white,
+                              color: isSelected
+                                  ? primaryBlue
+                                  : const Color(0xFF64748B),
                               size: 22,
                             ),
                             const SizedBox(width: 16),
                             Text(
                               menuItems[index]['title'] as String,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: isSelected
+                                    ? primaryBlue
+                                    : const Color(0xFF1E293B),
                                 fontSize: 14,
                                 fontWeight: isSelected
                                     ? FontWeight.bold
@@ -610,7 +638,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 18),
               child: Divider(
-                color: Color(0x33FFFFFF),
+                color: Color(0xFFE2E8F0),
                 thickness: 1,
               ),
             ),
@@ -629,14 +657,14 @@ class _DashboardGuruState extends State<DashboardGuru> {
                     children: [
                       Icon(
                         Icons.logout_rounded,
-                        color: cyanAccent,
+                        color: Colors.red,
                         size: 22,
                       ),
                       SizedBox(width: 16),
                       Text(
                         'Log Out',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Colors.red,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),

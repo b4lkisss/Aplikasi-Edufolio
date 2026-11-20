@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 
 class LoginGuru  extends StatefulWidget {
   const LoginGuru  ({super.key});
@@ -156,10 +157,31 @@ class _LoginGuruState extends State<LoginGuru> {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        '/dashboard-guru',
-                      );
+                      final id = emailController.text.trim();
+                      final pwd = passwordController.text.trim();
+                      if (id.isEmpty && pwd.isEmpty) {
+                        Navigator.pushReplacementNamed(
+                          context,
+                          '/dashboard-guru',
+                        );
+                        return;
+                      }
+                      final account = AuthService.login(id, pwd);
+                      if (account != null) {
+                        Navigator.pushReplacementNamed(context, account['route']!);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Username / Email atau Password salah!\n'
+                              'Admin: admin / admin123\n'
+                              'Guru: guru / guru123\n'
+                              'Siswa: siswa / siswa123',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF356DA8),
@@ -175,90 +197,6 @@ class _LoginGuruState extends State<LoginGuru> {
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 12),
-
-                const Text(
-                  'Or',
-                  style: TextStyle(color: Colors.grey),
-                ),
-
-                const SizedBox(height: 10),
-
-                // Login Google
-                SizedBox(
-                  width: double.infinity,
-                  height: 42,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // Google Sign In akan diatur nanti
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color(0xFF356DA8),
-                        width: 2,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'G',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF4285F4),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          'Sign up with Google',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                // PILIHAN LOGIN SEBAGAI ADMIN / SISWA
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          Navigator.pushReplacementNamed(context, '/login'),
-                      child: const Text(
-                        'Masuk sebagai Admin',
-                        style: TextStyle(
-                          color: Color(0xFF356DA8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    const Text('•', style: TextStyle(color: Colors.grey)),
-                    TextButton(
-                      onPressed: () =>
-                          Navigator.pushReplacementNamed(context, '/login-siswa'),
-                      child: const Text(
-                        'Masuk sebagai Siswa',
-                        style: TextStyle(
-                          color: Color(0xFF356DA8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

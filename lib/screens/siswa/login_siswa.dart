@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 
 class LoginSiswa extends StatefulWidget {
   const LoginSiswa({super.key});
@@ -20,6 +21,62 @@ class _LoginSiswaState extends State<LoginSiswa> {
     super.dispose();
   }
 
+  void _handleLogin() {
+    final identifier = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (identifier.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Silakan masukkan Username / Email dan Password!\n'
+            'Akun Siswa: siswa / siswa123',
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    final account = AuthService.login(identifier, password);
+
+    if (account != null) {
+      final role = account['role']!;
+      final route = account['route']!;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login berhasil sebagai $role!'),
+          backgroundColor: const Color(0xFF16A34A),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+
+      Navigator.pushReplacementNamed(context, route);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Username / Email atau Password salah!\n'
+            'Siswa: siswa / siswa123\n'
+            'Guru: guru / guru123\n'
+            'Admin: admin / admin123',
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void _quickFillSiswa() {
+    setState(() {
+      emailController.text = 'siswa';
+      passwordController.text = 'siswa123';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,7 +91,6 @@ class _LoginSiswaState extends State<LoginSiswa> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
                 // Logo EduFolio
                 Image.asset(
                   'assets/images/logo.png',
@@ -69,7 +125,7 @@ class _LoginSiswaState extends State<LoginSiswa> {
                   ),
                 ),
 
-                const SizedBox(height: 35),
+                const SizedBox(height: 30),
 
                 // Email / Username
                 TextField(
@@ -117,8 +173,7 @@ class _LoginSiswaState extends State<LoginSiswa> {
                       ),
                       onPressed: () {
                         setState(() {
-                          isPasswordVisible =
-                              !isPasswordVisible;
+                          isPasswordVisible = !isPasswordVisible;
                         });
                       },
                     ),
@@ -139,16 +194,42 @@ class _LoginSiswaState extends State<LoginSiswa> {
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+
+                // CHIP BANTUAN AUTOFILL DEMO AKUN
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap: _quickFillSiswa,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '💡 Isi Akun Siswa (siswa/siswa123)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF356DA8),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 14),
 
                 // Tombol Login
                 SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Fungsi login siswa akan dibuat nanti
-                    },
+                    onPressed: _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF356DA8),
                       foregroundColor: Colors.white,
@@ -160,95 +241,10 @@ class _LoginSiswaState extends State<LoginSiswa> {
                       'Login',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
+                        fontSize: 15,
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 12),
-
-                const Text(
-                  'Or',
-                  style: TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // Login Google
-                SizedBox(
-                  width: double.infinity,
-                  height: 42,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // Google Sign In akan dibuat nanti
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color(0xFF356DA8),
-                        width: 2,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'G',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF4285F4),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          'Sign up with Google',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                // PILIHAN LOGIN SEBAGAI ADMIN / GURU
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          Navigator.pushReplacementNamed(context, '/login'),
-                      child: const Text(
-                        'Masuk sebagai Admin',
-                        style: TextStyle(
-                          color: Color(0xFF356DA8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    const Text('•', style: TextStyle(color: Colors.grey)),
-                    TextButton(
-                      onPressed: () =>
-                          Navigator.pushReplacementNamed(context, '/login-guru'),
-                      child: const Text(
-                        'Masuk sebagai Guru',
-                        style: TextStyle(
-                          color: Color(0xFF356DA8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

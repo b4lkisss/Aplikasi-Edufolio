@@ -8,6 +8,11 @@ import 'screens/admin/profil_admin.dart';
 import 'screens/admin/data_guru.dart';
 import 'screens/admin/data_siswa.dart';
 import 'screens/siswa/login_siswa.dart';
+import 'screens/siswa/dashboard_siswa.dart';
+import 'screens/siswa/profil_siswa.dart';
+import 'screens/siswa/portofolio_siswa.dart';
+import 'screens/siswa/tambah_portofolio_siswa.dart';
+import 'screens/siswa/status_verifikasi_siswa.dart';
 import 'screens/guru/login_guru.dart';
 import 'screens/guru/dashboard_guru.dart';
 import 'screens/guru/profil_guru.dart';
@@ -46,6 +51,11 @@ class MyApp extends StatelessWidget {
         '/data-guru': (context) => const DataGuru(),
         '/data-siswa': (context) => const DataSiswa(),
         '/login-siswa': (context) => const LoginSiswa(),    
+        '/dashboard-siswa': (context) => const DashboardSiswa(),
+        '/profil-siswa': (context) => const ProfilSiswa(),
+        '/portofolio-siswa': (context) => const PortofolioSaya(),
+        '/tambah-portofolio-siswa': (context) => const TambahPortofolioSiswa(),
+        '/status-verifikasi-siswa': (context) => const StatusVerifikasiSiswa(),
         '/login-guru': (context) => const LoginGuru(),
         '/dashboard-guru': (context) => const DashboardGuru(),
         '/profil-guru': (context) => const ProfilGuru(),
