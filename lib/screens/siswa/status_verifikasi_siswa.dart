@@ -20,7 +20,7 @@ class _StatusVerifikasiSiswaState extends State<StatusVerifikasiSiswa> {
 
   late String selectedStatus; // 'Semua', 'Menunggu', 'Disetujui', 'Ditolak'
   int currentPage = 1;
-  final int itemsPerPage = 4;
+  final int itemsPerPage = 8;
 
   final List<String> statusTabs = [
     'Semua',
@@ -320,6 +320,49 @@ class _StatusVerifikasiSiswaState extends State<StatusVerifikasiSiswa> {
   }
 
   Widget _buildPagination(int totalPages, int activePage) {
+    if (totalPages <= 1) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Icon(
+              Icons.chevron_left_rounded,
+              color: Color(0xFFCBD5E1),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: primaryBlue,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              '1',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFFCBD5E1),
+              size: 20,
+            ),
+          ),
+        ],
+      );
+    }
+
     final displayCount = totalPages > 6 ? 6 : totalPages;
     final List<int> pages = List.generate(displayCount, (i) => i + 1);
 

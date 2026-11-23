@@ -4,6 +4,7 @@ import 'profil_guru.dart';
 import 'data_siswa_guru.dart';
 import 'verifikasi_portofolio_guru.dart';
 import 'detail_portofolio_guru.dart';
+import '../siswa/portofolio_siswa.dart';
 
 class DashboardGuru extends StatefulWidget {
   const DashboardGuru({super.key});
@@ -241,24 +242,63 @@ class _DashboardGuruState extends State<DashboardGuru> {
                     title: 'Total Siswa',
                     value: '32',
                     iconColor: const Color(0xFF4F46E5),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DataSiswaGuru(),
+                        ),
+                      );
+                    },
                   ),
                   _buildStatCard(
                     icon: Icons.folder_rounded,
                     title: 'Portofolio',
                     value: '150',
                     iconColor: const Color(0xFF2563EB),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PortofolioSaya(
+                            title: 'Seluruh Portofolio',
+                            initialKategori: 'Semua',
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   _buildStatCard(
                     icon: Icons.emoji_events_rounded,
                     title: 'Prestasi',
                     value: '28',
                     iconColor: const Color(0xFFD97706),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PortofolioSaya(
+                            title: 'Portofolio Prestasi',
+                            initialKategori: 'Prestasi & Lomba',
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   _buildStatCard(
                     icon: Icons.access_time_filled_rounded,
                     title: 'Menunggu',
                     value: '30',
                     iconColor: const Color(0xFF0D9488),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const VerifikasiPortofolioGuru(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -321,6 +361,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
     required String title,
     required String value,
     required Color iconColor,
+    VoidCallback? onTap,
   }) {
     final Color badgeBg = Color.fromARGB(
       30,
@@ -329,57 +370,61 @@ class _DashboardGuruState extends State<DashboardGuru> {
       iconColor.blue,
     );
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 20, color: iconColor),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0F000000),
+              blurRadius: 10,
+              offset: Offset(0, 4),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: badgeBg,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 20, color: iconColor),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF64748B),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

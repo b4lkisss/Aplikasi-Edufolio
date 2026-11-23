@@ -334,25 +334,28 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
 
   Widget _buildFilterCapsule(String label) {
     final bool isSelected = selectedKategori == label;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedKategori = label;
-        });
-      },
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? primaryBlue : cardBg,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF1E293B),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            selectedKategori = label;
+          });
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? primaryBlue : cardBg,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFF1E293B),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -361,8 +364,9 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
 
   Widget _buildSubmissionCard(Map<String, dynamic> item) {
     return Container(
+      width: double.infinity,
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(16),
@@ -530,43 +534,31 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left, size: 20),
-            onPressed: currentPage > 1
-                ? () => setState(() => currentPage--)
-                : null,
+          const IconButton(
+            icon: Icon(Icons.chevron_left, size: 20, color: Color(0xFFCBD5E1)),
+            onPressed: null,
           ),
-          ...List.generate(6, (index) {
-            final page = index + 1;
-            final isSelected = page == currentPage;
-            return InkWell(
-              onTap: () => setState(() => currentPage = page),
+          Container(
+            width: 28,
+            height: 28,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: primaryBlue,
               borderRadius: BorderRadius.circular(6),
-              child: Container(
-                width: 28,
-                height: 28,
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected ? primaryBlue : const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '$page',
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : const Color(0xFF1E293B),
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+            ),
+            child: const Text(
+              '1',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
-            );
-          }),
-          IconButton(
-            icon: const Icon(Icons.chevron_right, size: 20),
-            onPressed: currentPage < 6
-                ? () => setState(() => currentPage++)
-                : null,
+            ),
+          ),
+          const IconButton(
+            icon: Icon(Icons.chevron_right, size: 20, color: Color(0xFFCBD5E1)),
+            onPressed: null,
           ),
         ],
       ),

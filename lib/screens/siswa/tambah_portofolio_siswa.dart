@@ -372,7 +372,7 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
                 onTap: _pickFile,
                 child: Container(
                   width: double.infinity,
-                  height: 120,
+                  height: 130,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: primaryBlue, width: 1.5),
@@ -409,6 +409,12 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
                             ),
                           ),
                         ] else ...[
+                          const Icon(
+                            Icons.add_photo_alternate_outlined,
+                            size: 32,
+                            color: primaryBlue,
+                          ),
+                          const SizedBox(height: 6),
                           const Text(
                             'Pilih File / Upload',
                             style: TextStyle(
@@ -418,12 +424,23 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'JPG, PNG, PDF (Maks 10MB)',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF64748B),
-                            ),
+                          const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.image_outlined,
+                                size: 15,
+                                color: Color(0xFF64748B),
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                'JPG, PNG, PDF (Maks 10MB)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ],

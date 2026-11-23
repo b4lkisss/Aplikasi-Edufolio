@@ -19,7 +19,7 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
   String selectedAngkatan = 'Semua Angkatan';
 
   int currentPage = 1;
-  final int itemsPerPage = 6;
+  final int itemsPerPage = 8;
 
   List<Map<String, dynamic>> daftarSiswa = [
     {
@@ -185,11 +185,10 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
                   const SizedBox(height: 12),
 
                   // FILTER KELAS, JURUSAN, ANGKATAN
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildDropdownFilter(
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDropdownFilter(
                           value: selectedKelas,
                           items: const [
                             'Semua Kelas',
@@ -206,8 +205,10 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
                             }
                           },
                         ),
-                        const SizedBox(width: 8),
-                        _buildDropdownFilter(
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildDropdownFilter(
                           value: selectedJurusan,
                           items: const [
                             'Semua Jurusan',
@@ -224,8 +225,10 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
                             }
                           },
                         ),
-                        const SizedBox(width: 8),
-                        _buildDropdownFilter(
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildDropdownFilter(
                           value: selectedAngkatan,
                           items: const [
                             'Semua Angkatan',
@@ -242,8 +245,8 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
                             }
                           },
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 16),
@@ -279,8 +282,8 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
     required ValueChanged<String?> onChanged,
   }) {
     return Container(
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(8),
@@ -289,6 +292,7 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
+          isExpanded: true,
           icon: const Icon(
             Icons.keyboard_arrow_down_rounded,
             size: 18,
@@ -296,11 +300,17 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
           ),
           style: const TextStyle(
             color: Color(0xFF1E293B),
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
           items: items.map((item) {
-            return DropdownMenuItem(value: item, child: Text(item));
+            return DropdownMenuItem(
+              value: item,
+              child: Text(
+                item,
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
           }).toList(),
           onChanged: onChanged,
         ),
@@ -375,6 +385,47 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
   }
 
   Widget _buildPagination(int totalPages, int currentPage) {
+    if (totalPages <= 1) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const IconButton(
+              icon: Icon(Icons.chevron_left, size: 20, color: Color(0xFFCBD5E1)),
+              onPressed: null,
+            ),
+            Container(
+              width: 28,
+              height: 28,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: primaryColor,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                '1',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const IconButton(
+              icon: Icon(Icons.chevron_right, size: 20, color: Color(0xFFCBD5E1)),
+              onPressed: null,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: const BoxDecoration(

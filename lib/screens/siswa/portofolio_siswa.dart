@@ -5,8 +5,9 @@ import 'tambah_portofolio_siswa.dart';
 
 class PortofolioSaya extends StatefulWidget {
   final String? initialKategori;
+  final String? title;
 
-  const PortofolioSaya({super.key, this.initialKategori});
+  const PortofolioSaya({super.key, this.initialKategori, this.title});
 
   @override
   State<PortofolioSaya> createState() => _PortofolioSayaState();
@@ -21,7 +22,7 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
 
   late String selectedKategori;
   int currentPage = 1;
-  final int itemsPerPage = 5;
+  final int itemsPerPage = 8;
 
   final List<String> kategoriList = [
     'Semua',
@@ -57,9 +58,9 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Portofolio Saya',
-          style: TextStyle(
+        title: Text(
+          widget.title ?? 'Portofolio Saya',
+          style: const TextStyle(
             color: Color(0xFF0F172A),
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -364,6 +365,49 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
   }
 
   Widget _buildPagination(int totalPages, int activePage) {
+    if (totalPages <= 1) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Icon(
+              Icons.chevron_left_rounded,
+              color: Color(0xFFCBD5E1),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: primaryBlue,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              '1',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFFCBD5E1),
+              size: 20,
+            ),
+          ),
+        ],
+      );
+    }
+
     // Tombol 1 sampai max 6 atau totalPages
     final displayCount = totalPages > 6 ? 6 : totalPages;
     final List<int> pages = List.generate(displayCount, (i) => i + 1);

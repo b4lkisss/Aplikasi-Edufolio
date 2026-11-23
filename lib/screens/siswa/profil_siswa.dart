@@ -232,20 +232,13 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
-                          color: Colors.white,
+                          color: Color(0xFF254BD1),
                           shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0x33000000),
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
                         ),
                         child: const Icon(
-                          Icons.edit_rounded,
+                          Icons.camera_alt,
                           size: 16,
-                          color: Color(0xFF0F172A),
+                          color: Colors.white,
                         ),
                       ),
                     ),

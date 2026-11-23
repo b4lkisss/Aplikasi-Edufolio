@@ -158,6 +158,38 @@ class PortofolioDataStore {
           'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80',
       tanggalUnggah: '10 Feb 2025',
     ),
+    PortofolioItem(
+      id: '7',
+      judul: 'Aplikasi Mobile Edufolio',
+      kategori: 'Projek',
+      tingkat: 'Sekolah',
+      tanggal: '2025',
+      deskripsi:
+          'Pengembangan aplikasi mobile portofolio digital berbasis Flutter untuk mempermudah dokumentasi prestasi siswa.',
+      peran: 'Mobile Developer',
+      skills: ['Flutter', 'Dart', 'UI/UX Design', 'Git'],
+      link: 'https://github.com/edufolio-mobile',
+      status: 'Disetujui',
+      imageUrl:
+          'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=600&q=80',
+      tanggalUnggah: '15 Mar 2025',
+    ),
+    PortofolioItem(
+      id: '8',
+      judul: 'Ketua Divisi IT OSIS',
+      kategori: 'Organisasi',
+      tingkat: 'Sekolah',
+      tanggal: '2024',
+      deskripsi:
+          'Bertanggung jawab dalam pengelolaan publikasi digital, sistem informasi, dan dokumentasi teknologi kegiatan kesiswaan.',
+      peran: 'Ketua Divisi IT',
+      skills: ['Kepemimpinan', 'Kerjasama Tim', 'IT Support', 'Manajemen Projek'],
+      link: 'https://drive.google.com/sk-osis',
+      status: 'Disetujui',
+      imageUrl:
+          'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80',
+      tanggalUnggah: '10 Jan 2025',
+    ),
   ]);
 
   final ValueNotifier<SiswaProfile> profile =

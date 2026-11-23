@@ -64,21 +64,17 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
 
                   // DROPDOWN FILTER PERIODE
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 2,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
-                      border: Border.all(color: primaryBlue, width: 1.5),
-                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0x66254BD1)),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: selectedPeriod,
-                        isDense: true,
                         icon: const Icon(
                           Icons.keyboard_arrow_down_rounded,
-                          size: 20,
+                          size: 18,
                           color: primaryBlue,
                         ),
                         style: const TextStyle(
@@ -448,47 +444,7 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                 ),
               ),
 
-              const SizedBox(height: 20),
-
-              // KARYA UNGGULAN
-              const Text(
-                'Karya Unggulan',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // 3 THUMBNAIL KARYA UNGGULAN
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildThumbnail(
-                      'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=400&q=80',
-                      onTap: () => _openDetailFirst(),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildThumbnail(
-                      'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80',
-                      onTap: () => _openDetailFirst(),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildThumbnail(
-                      'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-                      onTap: () => _openDetailFirst(),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
 
               // TOMBOL "+ Upload Karya Baru"
               SizedBox(
@@ -583,19 +539,6 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
     );
   }
 
-  void _openDetailFirst() {
-    if (dataStore.portofolioList.value.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DetailPortofolioSiswa(
-            portofolio: dataStore.portofolioList.value.first,
-          ),
-        ),
-      );
-    }
-  }
-
   Widget _buildAdminStyleStatCard({
     required IconData icon,
     required String title,
@@ -664,28 +607,6 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildThumbnail(String url, {required VoidCallback onTap}) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          height: 65,
-          color: const Color(0xFFE2E8F0),
-          child: Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              color: const Color(0xFFE2E8F0),
-              child: const Icon(Icons.image, color: Colors.grey),
-            ),
-          ),
         ),
       ),
     );

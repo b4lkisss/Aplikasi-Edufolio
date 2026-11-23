@@ -1,4 +1,7 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../services/image_picker_service.dart';
+import '../siswa/custom_date_picker_dialog.dart';
 
 class ProfilGuru extends StatefulWidget {
   const ProfilGuru({super.key});
@@ -22,6 +25,7 @@ class _ProfilGuruState extends State<ProfilGuru> {
       TextEditingController(text: '083930865308943');
 
   String selectedGender = 'Laki-laki';
+  Uint8List? selectedImageBytes;
 
   final Color primaryBlue = const Color(0xFF254BD1);
   final Color fieldBg = const Color(0xFFD9D9D9);
@@ -37,24 +41,34 @@ class _ProfilGuruState extends State<ProfilGuru> {
     super.dispose();
   }
 
+  Future<void> _pickAvatar() async {
+    final bytes = await AppImagePicker.pickImage();
+    if (bytes != null) {
+      setState(() {
+        selectedImageBytes = bytes;
+      });
+    }
+  }
+
   Future<void> _pilihTanggal() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2008, 2, 14),
-      firstDate: DateTime(1960),
-      lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: primaryBlue,
-              onPrimary: Colors.white,
-              onSurface: const Color(0xFF1E293B),
-            ),
-          ),
-          child: child!,
-        );
-      },
+    DateTime initial = DateTime(1990, 1, 1);
+    if (tglLahirController.text.isNotEmpty) {
+      try {
+        final parts = tglLahirController.text.split('-');
+        if (parts.length == 3) {
+          final day = int.parse(parts[0]);
+          final month = int.parse(parts[1]);
+          final year = int.parse(parts[2]);
+          initial = DateTime(year, month, day);
+        }
+      } catch (_) {}
+    }
+
+    final DateTime? picked = await CustomDatePickerDialog.show(
+      context,
+      initialDate: initial,
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
     );
 
     if (picked != null) {
@@ -150,37 +164,50 @@ class _ProfilGuruState extends State<ProfilGuru> {
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x1F000000),
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-                        ),
-                        fit: BoxFit.cover,
+                  InkWell(
+                    onTap: _pickAvatar,
+                    borderRadius: BorderRadius.circular(60),
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x1F000000),
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                        image: selectedImageBytes != null
+                            ? DecorationImage(
+                                image: MemoryImage(selectedImageBytes!),
+                                fit: BoxFit.cover,
+                              )
+                            : const DecorationImage(
+                                image: NetworkImage(
+                                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                                ),
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF254BD1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_rounded,
-                      color: Colors.white,
-                      size: 16,
+                  InkWell(
+                    onTap: _pickAvatar,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF254BD1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     ),
                   ),
                 ],
