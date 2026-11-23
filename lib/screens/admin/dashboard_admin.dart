@@ -4,6 +4,8 @@ import 'profil_admin.dart';
 import 'data_siswa.dart';
 import 'data_guru.dart';
 import 'kategori_portofolio.dart';
+import 'grafik_statistik.dart';
+import '../siswa/portofolio_siswa.dart';
 
 class DashboardAdmin extends StatefulWidget {
   const DashboardAdmin({super.key});
@@ -26,6 +28,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     {'icon': Icons.school_rounded, 'title': 'Data Guru'},
     {'icon': Icons.people_alt_rounded, 'title': 'Data Siswa'},
     {'icon': Icons.assignment_outlined, 'title': 'Kategori'},
+    {'icon': Icons.bar_chart_rounded, 'title': 'Statistik & Grafik'},
     {'icon': Icons.notifications_rounded, 'title': 'Notification'},
     {'icon': Icons.person_rounded, 'title': 'My Profile'},
   ];
@@ -183,38 +186,78 @@ class _DashboardAdminState extends State<DashboardAdmin> {
 
               const SizedBox(height: 22),
 
-              // STATISTIK DASHBOARD
+              // STATISTIK DASHBOARD (2 BARIS: 1: TOTAL SISWA & TOTAL GURU, 2: PORTOFOLIO & PRESTASI)
               GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 0.95,
+                childAspectRatio: 1.15,
                 children: [
+                  // BARIS 1: TOTAL SISWA & TOTAL GURU
                   _buildStatCard(
                     Icons.school_rounded,
                     'Total Siswa',
                     '32',
                     const Color(0xFF4F46E5), // Indigo
-                  ),
-                  _buildStatCard(
-                    Icons.folder_rounded,
-                    'Portofolio',
-                    '150',
-                    const Color(0xFF2563EB), // Blue
-                  ),
-                  _buildStatCard(
-                    Icons.emoji_events_rounded,
-                    'Prestasi',
-                    '28',
-                    const Color(0xFFD97706), // Amber Pasti (Tidak gunakan .shade700)
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DataSiswa(),
+                        ),
+                      );
+                    },
                   ),
                   _buildStatCard(
                     Icons.people_alt_rounded,
                     'Total Guru',
                     '30',
                     const Color(0xFF0D9488), // Teal
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DataGuru(),
+                        ),
+                      );
+                    },
+                  ),
+                  // BARIS 2: PORTOFOLIO & PRESTASI
+                  _buildStatCard(
+                    Icons.folder_rounded,
+                    'Portofolio',
+                    '150',
+                    const Color(0xFF2563EB), // Blue
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PortofolioSaya(
+                            title: 'Seluruh Portofolio',
+                            initialKategori: 'Semua',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildStatCard(
+                    Icons.emoji_events_rounded,
+                    'Prestasi',
+                    '28',
+                    const Color(0xFFFFA000), // Amber Gold
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PortofolioSaya(
+                            title: 'Portofolio Prestasi',
+                            initialKategori: 'Prestasi & Lomba',
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -225,13 +268,6 @@ class _DashboardAdminState extends State<DashboardAdmin> {
               _buildSectionTitle('Menu Aksi Cepat'),
               const SizedBox(height: 12),
               _buildQuickActions(),
-
-              const SizedBox(height: 24),
-
-              // SECTION 2: STATISTIK KEAKTIFAN JURUSAN & KELAS
-              _buildSectionTitle('Keaktifan Jurusan & Kelas'),
-              const SizedBox(height: 12),
-              _buildKeaktifanJurusanDanKelas(),
 
               const SizedBox(height: 20),
             ],
@@ -396,6 +432,13 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                             builder: (context) => const KategoriPortofolio(),
                           ),
                         );
+                      } else if (item['title'] == 'Statistik & Grafik') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const GrafikStatistik(),
+                          ),
+                        );
                       } else if (item['title'] == 'My Profile') {
                         Navigator.push(
                           context,
@@ -502,70 +545,61 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     IconData icon,
     String title,
     String value,
-    Color iconColor,
-  ) {
-    final Color badgeBg = Color.fromARGB(
-      30,
-      iconColor.red,
-      iconColor.green,
-      iconColor.blue,
-    );
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ICON BADGE + JUDUL DI ATAS
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 20, color: iconColor),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-
-          const Spacer(),
-
-          // ANGKA BESAR DI BAWAH
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+    Color iconColor, {
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // JUDUL DI ATAS (NAVY BOLD PERSIS CONTOH GAMBAR)
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E3A8A),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            // ICON LEBIH BESARRRR DI TENGAH (SIZE 64)
+            Icon(
+              icon,
+              size: 64,
+              color: iconColor,
+            ),
+            const SizedBox(height: 6),
+            // ANGKA DI BAWAH (GREY SLATE BOLD)
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

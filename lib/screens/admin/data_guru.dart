@@ -1534,7 +1534,9 @@ class _DataGuruState extends State<DataGuru> {
                         horizontal: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: primaryColor,
+                        color: selectedBidang != 'Semua Bidang'
+                            ? primaryColor
+                            : fieldColor,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       alignment: Alignment.center,
@@ -1542,17 +1544,21 @@ class _DataGuruState extends State<DataGuru> {
                         child: DropdownButton<String>(
                           value: selectedBidang,
                           isExpanded: true,
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.keyboard_arrow_down,
-                            color: Colors.white,
+                            color: selectedBidang != 'Semua Bidang'
+                                ? Colors.white
+                                : Colors.black,
                             size: 18,
                           ),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11.5,
-                            color: Colors.white,
+                            color: selectedBidang != 'Semua Bidang'
+                                ? Colors.white
+                                : Colors.black,
                             fontWeight: FontWeight.w600,
                           ),
-                          dropdownColor: primaryColor,
+                          dropdownColor: Colors.white,
                           items: [
                             'Semua Bidang',
                             ...daftarBidang,
@@ -1563,6 +1569,15 @@ class _DataGuruState extends State<DataGuru> {
                                 item,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: item == selectedBidang &&
+                                          selectedBidang != 'Semua Bidang'
+                                      ? primaryColor
+                                      : const Color(0xFF1E293B),
+                                  fontWeight: item == selectedBidang
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
                               ),
                             );
                           }).toList(),

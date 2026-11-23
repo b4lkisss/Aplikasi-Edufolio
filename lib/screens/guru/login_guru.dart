@@ -198,6 +198,35 @@ class _LoginGuruState extends State<LoginGuru> {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 18),
+
+                // BELUM PUNYA AKUN? DAFTAR
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Belum punya akun? ',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, '/register');
+                      },
+                      child: const Text(
+                        'Daftar',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF356DA8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

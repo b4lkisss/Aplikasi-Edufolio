@@ -172,176 +172,221 @@ class _DataSiswaState extends State<DataSiswa> {
     String jurusan = siswa?['jurusan'] ?? 'RPL';
     String angkatan = siswa?['angkatan'] ?? '2026';
 
-    showDialog(
+    final List<String> opsiKelas = [
+      'X RPL A',
+      'X RPL B',
+      'XI RPL A',
+      'XI RPL B',
+      'XII RPL B',
+      'X TKJ B',
+      'XI TKJ A',
+      'XII TKJ A',
+    ];
+
+    final List<String> opsiJurusan = ['RPL', 'TKJ', 'DKV'];
+    final List<String> opsiAngkatan = ['2024', '2025', '2026'];
+
+    if (!opsiKelas.contains(kelas)) kelas = opsiKelas.first;
+    if (!opsiJurusan.contains(jurusan)) jurusan = opsiJurusan.first;
+    if (!opsiAngkatan.contains(angkatan)) angkatan = opsiAngkatan.first;
+
+    showModalBottomSheet(
       context: context,
-      builder: (dialogContext) {
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                siswa == null ? 'Tambah Siswa' : 'Edit Siswa',
-                style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.bold,
+          builder: (context, setSheetState) {
+            return Container(
+              width: double.infinity,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(20),
                 ),
               ),
-
-              content: SingleChildScrollView(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
-                    _formInput(
-                      'Nama Lengkap',
-                      namaController,
+                    // GARIS ATAS
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
 
-                    _formInput(
+                    // JUDUL: Edit Data Siswa / Tambah Data Siswa
+                    Text(
+                      siswa == null ? 'Tambah Data Siswa' : 'Edit Data Siswa',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // NAMA
+                    _buildSheetInput(
+                      'Nama',
+                      namaController,
+                      'Contoh: Balqis Demes',
+                    ),
+
+                    // NISN
+                    _buildSheetInput(
                       'NISN',
                       nisnController,
+                      'Contoh: 1234567890',
                       keyboardType: TextInputType.number,
                     ),
 
-                    _formDropdown(
+                    // KELAS
+                    _buildSheetDropdown(
                       'Kelas',
                       kelas,
-                      [
-                        'X RPL A',
-                        'X RPL B',
-                        'XI RPL A',
-                        'XI RPL B',
-                        'XII RPL B',
-                        'X TKJ B',
-                        'XI TKJ A',
-                        'XII TKJ A',
-                      ],
-                      (value) {
-                        setDialogState(() {
-                          kelas = value!;
-                        });
+                      opsiKelas,
+                      (val) {
+                        if (val != null) {
+                          setSheetState(() => kelas = val);
+                        }
                       },
                     ),
 
-                    _formDropdown(
+                    // JURUSAN
+                    _buildSheetDropdown(
                       'Jurusan',
                       jurusan,
-                      ['RPL', 'TKJ'],
-                      (value) {
-                        setDialogState(() {
-                          jurusan = value!;
-                        });
+                      opsiJurusan,
+                      (val) {
+                        if (val != null) {
+                          setSheetState(() => jurusan = val);
+                        }
                       },
                     ),
 
-                    _formDropdown(
+                    // ANGKATAN
+                    _buildSheetDropdown(
                       'Angkatan',
                       angkatan,
-                      ['2024', '2025', '2026'],
-                      (value) {
-                        setDialogState(() {
-                          angkatan = value!;
-                        });
+                      opsiAngkatan,
+                      (val) {
+                        if (val != null) {
+                          setSheetState(() => angkatan = val);
+                        }
                       },
                     ),
+
+                    const SizedBox(height: 10),
+
+                    // TOMBOL SIMPAN DATA
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (namaController.text.trim().isEmpty ||
+                              nisnController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Nama dan NISN wajib diisi'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (!RegExp(r'^\d{10}$')
+                              .hasMatch(nisnController.text.trim())) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('NISN harus terdiri dari 10 angka'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          final nisn = nisnController.text.trim();
+                          final nisnSudahAda = daftarSiswa.any((item) {
+                            return item['nisn'] == nisn &&
+                                (index == null ||
+                                    daftarSiswa.indexOf(item) != index);
+                          });
+
+                          if (nisnSudahAda) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('NISN sudah terdaftar'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setState(() {
+                            final dataBaru = {
+                              'nama': namaController.text.trim(),
+                              'nisn': nisn,
+                              'kelas': kelas,
+                              'jurusan': jurusan,
+                              'angkatan': angkatan,
+                              'avatar': 0,
+                            };
+
+                            if (index == null) {
+                              daftarSiswa.add(dataBaru);
+                            } else {
+                              daftarSiswa[index] = dataBaru;
+                            }
+                            currentPage = 1;
+                          });
+
+                          Navigator.pop(sheetContext);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                siswa == null
+                                    ? 'Siswa berhasil ditambahkan'
+                                    : 'Data siswa berhasil diperbarui',
+                              ),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        child: const Text(
+                          'Simpan Data',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),
-
-              actions: [
-
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                  },
-                  child: const Text('Batal'),
-                ),
-
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                  ),
-
-                  onPressed: () {
-                    if (namaController.text.trim().isEmpty ||
-                        nisnController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Nama dan NISN wajib diisi',
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-
-                    if (!RegExp(r'^\d{10}$')
-                        .hasMatch(nisnController.text.trim())) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'NISN harus terdiri dari 10 angka',
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-
-                    final nisn = nisnController.text.trim();
-
-                    final nisnSudahAda = daftarSiswa.any((item) {
-                      return item['nisn'] == nisn &&
-                          (index == null ||
-                              daftarSiswa.indexOf(item) != index);
-                    });
-
-                    if (nisnSudahAda) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('NISN sudah terdaftar'),
-                        ),
-                      );
-                      return;
-                    }
-
-                    setState(() {
-                      final dataBaru = {
-                        'nama': namaController.text.trim(),
-                        'nisn': nisn,
-                        'kelas': kelas,
-                        'jurusan': jurusan,
-                        'angkatan': angkatan,
-                        'avatar': 0,
-                      };
-
-                      if (index == null) {
-                        daftarSiswa.add(dataBaru);
-                      } else {
-                        daftarSiswa[index] = dataBaru;
-                      }
-
-                      currentPage = 1;
-                    });
-
-                    Navigator.pop(dialogContext);
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          siswa == null
-                              ? 'Siswa berhasil ditambahkan'
-                              : 'Data siswa berhasil diperbarui',
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  },
-
-                  child: Text(
-                    siswa == null ? 'Tambah' : 'Simpan',
-                  ),
-                ),
-              ],
             );
           },
         );
@@ -651,6 +696,7 @@ class _DataSiswaState extends State<DataSiswa> {
                                 currentPage = 1;
                               });
                             },
+                            isPrimary: selectedKelas != 'Semua Kelas',
                           ),
                           const SizedBox(width: 6),
                           _filterDropdown(
@@ -666,7 +712,7 @@ class _DataSiswaState extends State<DataSiswa> {
                                 currentPage = 1;
                               });
                             },
-                            isPrimary: true,
+                            isPrimary: selectedJurusan != 'Semua Jurusan',
                           ),
                           const SizedBox(width: 6),
                           _filterDropdown(
@@ -683,6 +729,7 @@ class _DataSiswaState extends State<DataSiswa> {
                                 currentPage = 1;
                               });
                             },
+                            isPrimary: selectedAngkatan != 'Semua Angkatan',
                           ),
                         ],
                       ),
@@ -994,6 +1041,141 @@ class _DataSiswaState extends State<DataSiswa> {
   }
 
 
+  // INPUT FORM BOTTOM SHEET (BORDER STYLE)
+  Widget _buildSheetInput(
+    String label,
+    TextEditingController controller,
+    String hint, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: primaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 44,
+            child: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              style: TextStyle(
+                fontSize: 12,
+                color: primaryColor,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade400,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: primaryColor,
+                    width: 1,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: primaryColor,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: primaryColor,
+                    width: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // DROPDOWN FORM BOTTOM SHEET (BORDER STYLE)
+  Widget _buildSheetDropdown(
+    String label,
+    String value,
+    List<String> items,
+    ValueChanged<String?> onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: primaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: primaryColor,
+                width: 1,
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: value,
+                isExpanded: true,
+                icon: Icon(
+                  Icons.keyboard_arrow_down,
+                  color: primaryColor,
+                  size: 20,
+                ),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: primaryColor,
+                ),
+                dropdownColor: Colors.white,
+                items: items.map((item) {
+                  return DropdownMenuItem(
+                    value: item,
+                    child: Text(
+                      item,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: primaryColor,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: onChanged,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // DROPDOWN FILTER
   Widget _filterDropdown(
     String value,
@@ -1023,11 +1205,21 @@ class _DataSiswaState extends State<DataSiswa> {
             color: isPrimary ? Colors.white : Colors.black,
             fontWeight: FontWeight.w600,
           ),
-          dropdownColor: isPrimary ? primaryColor : Colors.white,
+          dropdownColor: Colors.white,
           items: items.map((item) {
             return DropdownMenuItem(
               value: item,
-              child: Text(item),
+              child: Text(
+                item,
+                style: TextStyle(
+                  color: item == value && isPrimary
+                      ? primaryColor
+                      : const Color(0xFF1E293B),
+                  fontWeight: item == value
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
             );
           }).toList(),
           onChanged: onChanged,

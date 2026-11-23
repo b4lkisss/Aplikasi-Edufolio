@@ -228,15 +228,16 @@ class _DashboardGuruState extends State<DashboardGuru> {
 
               const SizedBox(height: 18),
 
-              // GRID 4 KARTU STATISTIK (MODEL SAMA PERSIS SEPERTI DI ADMIN)
+              // 4 KARTU STATISTIK (2 BARIS: 1: TOTAL SISWA & MENUNGGU, 2: PORTOFOLIO & PRESTASI)
               GridView.count(
+                crossAxisCount: 2,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 0.95,
+                childAspectRatio: 1.15,
                 children: [
+                  // BARIS 1: TOTAL SISWA & MENUNGGU
                   _buildStatCard(
                     icon: Icons.people_alt_rounded,
                     title: 'Total Siswa',
@@ -251,6 +252,22 @@ class _DashboardGuruState extends State<DashboardGuru> {
                       );
                     },
                   ),
+                  _buildStatCard(
+                    icon: Icons.access_time_filled_rounded,
+                    title: 'Menunggu',
+                    value: '30',
+                    iconColor: const Color(0xFF0D9488),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const VerifikasiPortofolioGuru(),
+                        ),
+                      );
+                    },
+                  ),
+                  // BARIS 2: PORTOFOLIO & PRESTASI
                   _buildStatCard(
                     icon: Icons.folder_rounded,
                     title: 'Portofolio',
@@ -272,7 +289,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
                     icon: Icons.emoji_events_rounded,
                     title: 'Prestasi',
                     value: '28',
-                    iconColor: const Color(0xFFD97706),
+                    iconColor: const Color(0xFFFFA000),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -281,21 +298,6 @@ class _DashboardGuruState extends State<DashboardGuru> {
                             title: 'Portofolio Prestasi',
                             initialKategori: 'Prestasi & Lomba',
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildStatCard(
-                    icon: Icons.access_time_filled_rounded,
-                    title: 'Menunggu',
-                    value: '30',
-                    iconColor: const Color(0xFF0D9488),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const VerifikasiPortofolioGuru(),
                         ),
                       );
                     },
@@ -363,64 +365,54 @@ class _DashboardGuruState extends State<DashboardGuru> {
     required Color iconColor,
     VoidCallback? onTap,
   }) {
-    final Color badgeBg = Color.fromARGB(
-      30,
-      iconColor.red,
-      iconColor.green,
-      iconColor.blue,
-    );
-
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-          boxShadow: const [
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0F000000),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: badgeBg,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, size: 20, color: iconColor),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF64748B),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            // JUDUL DI ATAS (NAVY BOLD PERSIS CONTOH GAMBAR)
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E3A8A),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
-            const Spacer(),
+            const SizedBox(height: 6),
+            // ICON LEBIH BESARRRR DI TENGAH (SIZE 64)
+            Icon(
+              icon,
+              size: 64,
+              color: iconColor,
+            ),
+            const SizedBox(height: 6),
+            // ANGKA DI BAWAH (GREY SLATE BOLD)
             Text(
               value,
               style: const TextStyle(
-                fontSize: 34,
+                fontSize: 19,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+                color: Color(0xFF64748B),
               ),
             ),
           ],

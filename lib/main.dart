@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/supabase_service.dart';
 import 'screens/splash_screen.dart';
+import 'screens/register_screen.dart';
 import 'screens/admin/login_admin.dart';
 import 'screens/admin/dashboard_admin.dart';
 import 'screens/admin/profil_admin.dart';
 import 'screens/admin/data_guru.dart';
 import 'screens/admin/data_siswa.dart';
+import 'screens/admin/grafik_statistik.dart';
 import 'screens/siswa/login_siswa.dart';
 import 'screens/siswa/dashboard_siswa.dart';
 import 'screens/siswa/profil_siswa.dart';
@@ -46,10 +48,12 @@ class MyApp extends StatelessWidget {
       home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginAdmin(),
+        '/register': (context) => const RegisterScreen(),
         '/dashboard-admin': (context) => const DashboardAdmin(),
         '/profil-admin': (context) => const ProfilAdmin(),
         '/data-guru': (context) => const DataGuru(),
         '/data-siswa': (context) => const DataSiswa(),
+        '/grafik-statistik': (context) => const GrafikStatistik(),
         '/login-siswa': (context) => const LoginSiswa(),    
         '/dashboard-siswa': (context) => const DashboardSiswa(),
         '/profil-siswa': (context) => const ProfilSiswa(),
