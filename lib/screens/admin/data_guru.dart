@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import '../../services/master_data_service.dart';
 import 'detail_guru.dart';
 
 class DataGuru extends StatefulWidget {
@@ -126,6 +127,21 @@ class _DataGuruState extends State<DataGuru> {
     'P-Web',
     'Basis Data',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchGuruFromSupabase();
+  }
+
+  Future<void> _fetchGuruFromSupabase() async {
+    final data = await MasterDataService.getDaftarGuru();
+    if (data.isNotEmpty && mounted) {
+      setState(() {
+        daftarGuru = data;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -398,18 +414,34 @@ class _DataGuruState extends State<DataGuru> {
                             return;
                           }
 
+                          final nama = namaController.text.trim();
+                          final bidangVal = bidang;
+                          final email = emailController.text.trim();
+                          final nip = nipController.text.trim();
+                          final pass = passwordController.text.trim();
+
                           setState(() {
-                            daftarGuru.add({
-                              'nama': namaController.text.trim(),
-                              'bidang': bidang,
-                              'email': emailController.text.trim(),
-                              'nip': nipController.text.trim(),
+                            daftarGuru.insert(0, {
+                              'nama': nama,
+                              'bidang': bidangVal,
+                              'email': email,
+                              'nip': nip,
+                              'password': pass,
                               'telepon': '',
-                              'gender': '',
+                              'gender': 'Laki-laki',
                               'aktif': true,
                             });
                             currentPage = 1;
                           });
+
+                          // Simpan ke Supabase
+                          MasterDataService.tambahGuru(
+                            nama: nama,
+                            nip: nip,
+                            email: email,
+                            password: pass,
+                            bidang: bidangVal,
+                          );
 
                           Navigator.pop(sheetContext);
 
@@ -688,16 +720,35 @@ class _DataGuruState extends State<DataGuru> {
                             return;
                           }
 
+                          final updatedNama = namaController.text.trim();
+                          final updatedEmail = emailController.text.trim();
+                          final updatedNip = nipController.text.trim();
+                          final updatedBidang = bidang;
+                          final guruId = daftarGuru[index]['id'];
+
                           setState(() {
                             daftarGuru[index] = {
                               ...daftarGuru[index],
-                              'nama': namaController.text.trim(),
-                              'email': emailController.text.trim(),
-                              'nip': nipController.text.trim(),
-                              'bidang': bidang,
+                              'nama': updatedNama,
+                              'email': updatedEmail,
+                              'nip': updatedNip,
+                              'bidang': updatedBidang,
                             };
                             currentPage = 1;
                           });
+
+                          if (guruId != null) {
+                            MasterDataService.updateGuru(
+                              id: guruId,
+                              nama: updatedNama,
+                              nip: updatedNip,
+                              email: updatedEmail,
+                              bidang: updatedBidang,
+                              password: passwordController.text.isNotEmpty
+                                  ? passwordController.text.trim()
+                                  : null,
+                            );
+                          }
 
                           Navigator.pop(sheetContext);
 
@@ -1345,7 +1396,8 @@ class _DataGuruState extends State<DataGuru> {
                       child: SizedBox(
                         height: 40,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
+                            final guruId = daftarGuru[index]['id'];
                             setState(() {
                               daftarGuru.removeAt(index);
 
@@ -1362,6 +1414,8 @@ class _DataGuruState extends State<DataGuru> {
                             });
 
                             Navigator.pop(dialogContext);
+
+                            await MasterDataService.hapusGuru(guruId);
 
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(

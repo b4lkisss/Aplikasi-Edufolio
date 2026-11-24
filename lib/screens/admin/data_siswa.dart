@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'detail_siswa.dart';
+import '../../services/master_data_service.dart';
 
 class DataSiswa extends StatefulWidget {
   const DataSiswa({super.key});
@@ -114,6 +115,21 @@ class _DataSiswaState extends State<DataSiswa> {
       'avatar': 0,
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSiswaFromSupabase();
+  }
+
+  Future<void> _fetchSiswaFromSupabase() async {
+    final data = await MasterDataService.getDaftarSiswa();
+    if (data.isNotEmpty && mounted) {
+      setState(() {
+        daftarSiswa = data;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -337,13 +353,21 @@ class _DataSiswaState extends State<DataSiswa> {
                             return;
                           }
 
+                          final namaFinal = namaController.text.trim();
+                          final nisnFinal = nisn;
+                          final kelasFinal = kelas;
+                          final jurusanFinal = jurusan;
+                          final angkatanFinal = angkatan;
+                          final emailFinal = index != null ? (daftarSiswa[index]['email'] ?? '') : '';
+                          final siswaIdFinal = index != null ? daftarSiswa[index]['id'] : null;
+
                           setState(() {
                             final dataBaru = {
-                              'nama': namaController.text.trim(),
-                              'nisn': nisn,
-                              'kelas': kelas,
-                              'jurusan': jurusan,
-                              'angkatan': angkatan,
+                              'nama': namaFinal,
+                              'nisn': nisnFinal,
+                              'kelas': kelasFinal,
+                              'jurusan': jurusanFinal,
+                              'angkatan': angkatanFinal,
                               'avatar': 0,
                             };
 
@@ -356,6 +380,31 @@ class _DataSiswaState extends State<DataSiswa> {
                           });
 
                           Navigator.pop(sheetContext);
+
+                          // Sync ke Supabase
+                          if (index == null) {
+                            MasterDataService.tambahSiswa(
+                              nama: namaFinal,
+                              nisn: nisnFinal,
+                              email: '',
+                              password: '',
+                              kelas: kelasFinal,
+                              jurusan: jurusanFinal,
+                              angkatan: angkatanFinal,
+                            );
+                          } else {
+                            if (siswaIdFinal != null) {
+                              MasterDataService.updateSiswa(
+                                id: siswaIdFinal,
+                                nama: namaFinal,
+                                nisn: nisnFinal,
+                                email: emailFinal,
+                                kelas: kelasFinal,
+                                jurusan: jurusanFinal,
+                                angkatan: angkatanFinal,
+                              );
+                            }
+                          }
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -494,7 +543,8 @@ class _DataSiswaState extends State<DataSiswa> {
                       child: SizedBox(
                         height: 40,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
+                            final siswaId = daftarSiswa[index]['id'];
                             setState(() {
                               daftarSiswa.removeAt(index);
 
@@ -506,6 +556,10 @@ class _DataSiswaState extends State<DataSiswa> {
                             });
 
                             Navigator.pop(dialogContext);
+
+                            if (siswaId != null) {
+                              await MasterDataService.hapusSiswa(siswaId);
+                            }
 
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(

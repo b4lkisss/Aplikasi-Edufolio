@@ -37,6 +37,7 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
   @override
   void initState() {
     super.initState();
+    dataStore.fetchFromSupabase();
     selectedKategori = widget.initialKategori ?? 'Kategori';
     if (selectedKategori == 'Semua' || selectedKategori == 'Semua Kategori') {
       selectedKategori = 'Kategori';

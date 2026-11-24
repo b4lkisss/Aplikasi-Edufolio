@@ -32,6 +32,12 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    dataStore.fetchFromSupabase();
+  }
+
+  @override
   void dispose() {
     searchController.dispose();
     super.dispose();

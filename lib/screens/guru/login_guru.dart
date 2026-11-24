@@ -13,12 +13,57 @@ class _LoginGuruState extends State<LoginGuru> {
   final passwordController = TextEditingController();
 
   bool isPasswordVisible = false;
+  bool isLoading = false;
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    final id = emailController.text.trim();
+    final pwd = passwordController.text.trim();
+
+    if (id.isEmpty || pwd.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan masukkan Email / NIP dan Password!'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final account = await AuthService.loginGuru(id, pwd);
+
+    if (!mounted) return;
+    setState(() {
+      isLoading = false;
+    });
+
+    if (account != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login berhasil! Selamat datang, ${account['nama']}'),
+          backgroundColor: const Color(0xFF16A34A),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      Navigator.pushReplacementNamed(context, '/dashboard-guru');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email / NIP atau Password salah!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -156,33 +201,7 @@ class _LoginGuruState extends State<LoginGuru> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () {
-                      final id = emailController.text.trim();
-                      final pwd = passwordController.text.trim();
-                      if (id.isEmpty && pwd.isEmpty) {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          '/dashboard-guru',
-                        );
-                        return;
-                      }
-                      final account = AuthService.login(id, pwd);
-                      if (account != null) {
-                        Navigator.pushReplacementNamed(context, account['route']!);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Username / Email atau Password salah!\n'
-                              'Admin: admin / admin123\n'
-                              'Guru: guru / guru123\n'
-                              'Siswa: siswa / siswa123',
-                            ),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF356DA8),
                       foregroundColor: Colors.white,
@@ -190,12 +209,21 @@ class _LoginGuruState extends State<LoginGuru> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
 

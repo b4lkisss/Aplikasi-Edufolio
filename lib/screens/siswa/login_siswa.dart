@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import 'portofolio_data.dart';
 
 class LoginSiswa extends StatefulWidget {
   const LoginSiswa({super.key});
@@ -13,6 +14,7 @@ class _LoginSiswaState extends State<LoginSiswa> {
   final passwordController = TextEditingController();
 
   bool isPasswordVisible = false;
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -21,17 +23,14 @@ class _LoginSiswaState extends State<LoginSiswa> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     final identifier = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (identifier.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Silakan masukkan Username / Email dan Password!\n'
-            'Akun Siswa: siswa / siswa123',
-          ),
+          content: Text('Silakan masukkan Email / NISN dan Password!'),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 3),
         ),
@@ -39,30 +38,46 @@ class _LoginSiswaState extends State<LoginSiswa> {
       return;
     }
 
-    final account = AuthService.login(identifier, password);
+    setState(() {
+      isLoading = true;
+    });
+
+    final account = await AuthService.loginSiswa(identifier, password);
+
+    if (!mounted) return;
+    setState(() {
+      isLoading = false;
+    });
 
     if (account != null) {
-      final role = account['role']!;
-      final route = account['route']!;
+      final user = account['user'] as Map<String, dynamic>?;
+      if (user != null) {
+        // Sinkronkan data profil siswa yang login
+        final dataStore = PortofolioDataStore();
+        dataStore.profile.value = SiswaProfile(
+          nama: user['nama_siswa'] ?? 'Siswa',
+          nisn: user['nisn'] ?? '',
+          kelas: user['kelas'] ?? 'XII RPL B',
+          jurusan: user['jurusan'] ?? 'RPL',
+          email: user['email'] ?? '',
+          noTelpon: user['no_telepon'] ?? '',
+          jenisKelamin: user['jenis_kelamin'] ?? 'Laki-laki',
+        );
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Login berhasil sebagai $role!'),
+          content: Text('Login berhasil! Selamat datang, ${account['nama']}'),
           backgroundColor: const Color(0xFF16A34A),
-          duration: const Duration(seconds: 1),
+          duration: const Duration(seconds: 2),
         ),
       );
 
-      Navigator.pushReplacementNamed(context, route);
+      Navigator.pushReplacementNamed(context, '/dashboard-siswa');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Username / Email atau Password salah!\n'
-            'Siswa: siswa / siswa123\n'
-            'Guru: guru / guru123\n'
-            'Admin: admin / admin123',
-          ),
+          content: Text('Email / NISN atau Password salah! Periksa kembali akun Anda.'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),
@@ -229,7 +244,7 @@ class _LoginSiswaState extends State<LoginSiswa> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: _handleLogin,
+                    onPressed: isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF356DA8),
                       foregroundColor: Colors.white,
@@ -237,13 +252,22 @@ class _LoginSiswaState extends State<LoginSiswa> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
                   ),
                 ),
 

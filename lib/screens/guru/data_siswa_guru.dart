@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../admin/detail_siswa.dart';
+import '../../services/master_data_service.dart';
 
 class DataSiswaGuru extends StatefulWidget {
   const DataSiswaGuru({super.key});
@@ -87,6 +88,21 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
       'avatar': 1,
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSiswaFromSupabase();
+  }
+
+  Future<void> _fetchSiswaFromSupabase() async {
+    final data = await MasterDataService.getDaftarSiswa();
+    if (data.isNotEmpty && mounted) {
+      setState(() {
+        daftarSiswa = data;
+      });
+    }
+  }
 
   @override
   void dispose() {

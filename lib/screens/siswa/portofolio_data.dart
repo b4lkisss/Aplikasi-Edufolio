@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/portofolio_service.dart';
 
 class PortofolioItem {
   final String id;
@@ -340,7 +341,18 @@ class PortofolioDataStore {
     ),
   ]);
 
-  // CRUD METODE PORTOFOLIO
+  // CRUD METODE PORTOFOLIO DENGAN SINKRONISASI SUPABASE
+  Future<void> fetchFromSupabase() async {
+    try {
+      final supabaseItems = await PortofolioService.fetchAllPortofolio();
+      if (supabaseItems.isNotEmpty) {
+        portofolioList.value = supabaseItems;
+      }
+    } catch (e) {
+      // Jika offline, pertahankan data lokal
+    }
+  }
+
   void addPortofolio(PortofolioItem item) {
     portofolioList.value = [item, ...portofolioList.value];
 
@@ -354,14 +366,27 @@ class PortofolioDataStore {
       icon: Icons.upload_file_rounded,
       iconColor: const Color(0xFF254BD1),
     ));
+
+    // Sinkronkan ke Supabase
+    PortofolioService.tambahPortofolio(
+      judul: item.judul,
+      kategori: item.kategori,
+      deskripsi: item.deskripsi,
+      link: item.link,
+      tingkat: item.tingkat,
+      peran: item.peran,
+      skills: item.skills,
+      tanggal: item.tanggalUnggah,
+    );
   }
 
-  void updateStatus(String id, String newStatus) {
+  void updateStatus(String id, String newStatus, {String? catatan}) {
     final list = [...portofolioList.value];
     final index = list.indexWhere((element) => element.id == id);
     if (index != -1) {
       final old = list[index];
       old.status = newStatus;
+      if (catatan != null) old.catatan = catatan;
       portofolioList.value = list;
 
       // Tambahkan notifikasi untuk siswa
@@ -374,6 +399,13 @@ class PortofolioDataStore {
         icon: newStatus == 'Disetujui' ? Icons.check_circle_rounded : Icons.cancel_rounded,
         iconColor: newStatus == 'Disetujui' ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
       ));
+
+      // Update ke tabel verifikasi di Supabase
+      PortofolioService.updateStatusVerifikasi(
+        idPortofolio: id,
+        newStatus: newStatus,
+        catatan: catatan,
+      );
     }
   }
 
@@ -396,6 +428,12 @@ class PortofolioDataStore {
       old.catatan = catatan;
       portofolioList.value = list;
 
+      final totalScore = ((kreativitas ?? 0) +
+              (kualitas ?? 0) +
+              (relevansi ?? 0) +
+              (dokumentasi ?? 0)) *
+          5;
+
       addNotification(AppNotification(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: 'Penilaian Diterima',
@@ -405,6 +443,13 @@ class PortofolioDataStore {
         icon: Icons.star_rounded,
         iconColor: const Color(0xFFF59E0B),
       ));
+
+      // Simpan penilaian ke Supabase
+      PortofolioService.simpanPenilaian(
+        idPortofolio: id,
+        nilai: totalScore,
+        catatan: catatan,
+      );
     }
   }
 

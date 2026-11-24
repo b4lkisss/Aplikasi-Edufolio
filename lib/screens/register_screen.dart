@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'siswa/portofolio_data.dart';
+import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,6 +13,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final Color primaryColor = const Color(0xFF356DA8);
 
   final _formKey = GlobalKey<FormState>();
+
+  bool isLoading = false;
 
   // Controllers
   final TextEditingController namaController = TextEditingController();
@@ -70,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _handleRegister() {
+  Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -85,35 +88,65 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    // Simpan data profil siswa baru ke data store
-    final dataStore = PortofolioDataStore();
-    dataStore.profile.value = SiswaProfile(
+    setState(() {
+      isLoading = true;
+    });
+
+    final res = await AuthService.registerSiswa(
       nama: namaController.text.trim(),
       nisn: nisnController.text.trim(),
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+      noTelepon: noTelponController.text.trim(),
+      jenisKelamin: selectedJenisKelamin,
       kelas: selectedKelas,
       jurusan: selectedJurusan,
-      email: emailController.text.trim(),
-      noTelpon: noTelponController.text.trim(),
-      jenisKelamin: selectedJenisKelamin,
     );
 
-    // Tampilkan notifikasi selamat datang
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Pendaftaran berhasil! Selamat datang di Edufolio, ${namaController.text.trim()}',
+    if (!mounted) return;
+    setState(() {
+      isLoading = false;
+    });
+
+    if (res['success'] == true) {
+      // Simpan data profil siswa baru ke data store lokal
+      final dataStore = PortofolioDataStore();
+      dataStore.profile.value = SiswaProfile(
+        nama: namaController.text.trim(),
+        nisn: nisnController.text.trim(),
+        kelas: selectedKelas,
+        jurusan: selectedJurusan,
+        email: emailController.text.trim(),
+        noTelpon: noTelponController.text.trim(),
+        jenisKelamin: selectedJenisKelamin,
+      );
+
+      // Tampilkan notifikasi selamat datang
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Pendaftaran berhasil tersimpan ke Supabase! Selamat datang, ${namaController.text.trim()}',
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+      );
 
-    // Langsung auto-login ke Dashboard Siswa (hapus history navigasi login/register)
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      '/dashboard-siswa',
-      (route) => false,
-    );
+      // Langsung auto-login ke Dashboard Siswa
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/dashboard-siswa',
+        (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mendaftar: ${res['message'] ?? 'Terjadi kesalahan'}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override
@@ -316,7 +349,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: _handleRegister,
+                    onPressed: isLoading ? null : _handleRegister,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
@@ -325,13 +358,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Daftar Sekarang',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Daftar Sekarang',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
 

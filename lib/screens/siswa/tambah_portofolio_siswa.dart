@@ -27,6 +27,7 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
   DateTime? selectedDate;
   Uint8List? selectedImageBytes;
   String? uploadedFileName;
+  bool isLoading = false;
 
   final List<String> opsiKategori = [
     'Prestasi & Lomba',
@@ -89,7 +90,7 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
     }
   }
 
-  void _kirimPortofolio() {
+  Future<void> _kirimPortofolio() async {
     if (judulController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -140,6 +141,10 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
       return;
     }
 
+    setState(() {
+      isLoading = true;
+    });
+
     // Ambil skills dari input dipisahkan koma
     List<String> skillsList = [];
     if (skillController.text.trim().isNotEmpty) {
@@ -157,6 +162,9 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
     final monthStr = selectedDate!.month.toString().padLeft(2, '0');
     final formattedDate = '$dayStr/$monthStr/${selectedDate!.year}';
 
+    final dataStore = PortofolioDataStore();
+    final profile = dataStore.profile.value;
+
     final newItem = PortofolioItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       judul: judulController.text.trim(),
@@ -172,12 +180,19 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
           ? linkController.text.trim()
           : 'https://drive.google.com/portofolio-edufolio',
       status: 'Menunggu',
+      namaSiswa: profile.nama,
+      kelas: profile.kelas,
       imageUrl:
           'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
       tanggalUnggah: formattedDate,
     );
 
-    PortofolioDataStore().addPortofolio(newItem);
+    dataStore.addPortofolio(newItem);
+
+    if (!mounted) return;
+    setState(() {
+      isLoading = false;
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -186,7 +201,7 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
             Icon(Icons.check_circle_rounded, color: Colors.white),
             SizedBox(width: 10),
             Expanded(
-              child: Text('Portofolio berhasil dikirim untuk verifikasi!'),
+              child: Text('Portofolio berhasil dikirim dan tersimpan ke Supabase!'),
             ),
           ],
         ),
@@ -466,7 +481,7 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _kirimPortofolio,
+                  onPressed: isLoading ? null : _kirimPortofolio,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryBlue,
                     foregroundColor: Colors.white,
@@ -475,13 +490,22 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Kirim untuk Verifikasi',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : const Text(
+                          'Kirim untuk Verifikasi',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
 

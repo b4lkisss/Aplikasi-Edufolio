@@ -33,6 +33,7 @@ class _StatusVerifikasiSiswaState extends State<StatusVerifikasiSiswa> {
   @override
   void initState() {
     super.initState();
+    dataStore.fetchFromSupabase();
     selectedStatus = widget.initialStatus ?? 'Semua';
     if (!statusTabs.contains(selectedStatus)) {
       selectedStatus = 'Semua';
