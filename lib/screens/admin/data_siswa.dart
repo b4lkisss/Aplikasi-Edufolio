@@ -16,9 +16,9 @@ class _DataSiswaState extends State<DataSiswa> {
   final TextEditingController searchController =
       TextEditingController();
 
-  String selectedKelas = 'Semua Kelas';
-  String selectedJurusan = 'Semua Jurusan';
-  String selectedAngkatan = 'Semua Angkatan';
+  String selectedKelas = 'Kelas';
+  String selectedJurusan = 'Jurusan';
+  String selectedAngkatan = 'Angkatan';
 
   int currentPage = 1;
   final int itemsPerPage = 9;
@@ -130,13 +130,16 @@ class _DataSiswaState extends State<DataSiswa> {
           siswa['nama'].toString().toLowerCase().contains(search) ||
           siswa['nisn'].toString().contains(search);
 
-      final cocokKelas = selectedKelas == 'Semua Kelas' ||
+      final cocokKelas = selectedKelas == 'Kelas' ||
+          selectedKelas == 'Semua Kelas' ||
           siswa['kelas'] == selectedKelas;
 
-      final cocokJurusan = selectedJurusan == 'Semua Jurusan' ||
+      final cocokJurusan = selectedJurusan == 'Jurusan' ||
+          selectedJurusan == 'Semua Jurusan' ||
           siswa['jurusan'] == selectedJurusan;
 
-      final cocokAngkatan = selectedAngkatan == 'Semua Angkatan' ||
+      final cocokAngkatan = selectedAngkatan == 'Angkatan' ||
+          selectedAngkatan == 'Semua Angkatan' ||
           siswa['angkatan'] == selectedAngkatan;
 
       return cocokPencarian &&
@@ -671,72 +674,58 @@ class _DataSiswaState extends State<DataSiswa> {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
                 children: [
-                  // DAFTAR FILTER DROPDOWN
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _filterDropdown(
-                            selectedKelas,
-                            [
-                              'Semua Kelas',
-                              'X RPL A',
-                              'X RPL B',
-                              'XI RPL A',
-                              'XI RPL B',
-                              'XII RPL B',
-                              'X TKJ B',
-                              'XI TKJ A',
-                              'XII TKJ A',
-                            ],
-                            (value) {
-                              setState(() {
-                                selectedKelas = value!;
-                                currentPage = 1;
-                              });
-                            },
-                            isPrimary: selectedKelas != 'Semua Kelas',
-                          ),
-                          const SizedBox(width: 6),
-                          _filterDropdown(
-                            selectedJurusan,
-                            [
-                              'Semua Jurusan',
-                              'RPL',
-                              'TKJ',
-                            ],
-                            (value) {
-                              setState(() {
-                                selectedJurusan = value!;
-                                currentPage = 1;
-                              });
-                            },
-                            isPrimary: selectedJurusan != 'Semua Jurusan',
-                          ),
-                          const SizedBox(width: 6),
-                          _filterDropdown(
-                            selectedAngkatan,
-                            [
-                              'Semua Angkatan',
-                              '2024',
-                              '2025',
-                              '2026',
-                            ],
-                            (value) {
-                              setState(() {
-                                selectedAngkatan = value!;
-                                currentPage = 1;
-                              });
-                            },
-                            isPrimary: selectedAngkatan != 'Semua Angkatan',
-                          ),
-                        ],
-                      ),
-                    ),
+                  _filterDropdown(
+                    selectedKelas,
+                    [
+                      'Kelas',
+                      'X RPL A',
+                      'X RPL B',
+                      'XI RPL A',
+                      'XI RPL B',
+                      'XII RPL B',
+                      'X TKJ B',
+                      'XI TKJ A',
+                      'XII TKJ A',
+                    ],
+                    (value) {
+                      setState(() {
+                        selectedKelas = value!;
+                        currentPage = 1;
+                      });
+                    },
                   ),
-
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
+                  _filterDropdown(
+                    selectedJurusan,
+                    [
+                      'Jurusan',
+                      'RPL',
+                      'TKJ',
+                    ],
+                    (value) {
+                      setState(() {
+                        selectedJurusan = value!;
+                        currentPage = 1;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 6),
+                  _filterDropdown(
+                    selectedAngkatan,
+                    [
+                      'Angkatan',
+                      '2024',
+                      '2025',
+                      '2026',
+                    ],
+                    (value) {
+                      setState(() {
+                        selectedAngkatan = value!;
+                        currentPage = 1;
+                      });
+                    },
+                  ),
+                  const Spacer(),
 
                   // TOMBOL TAMBAH SISWA (UKURAN PERSIS SAMA DENGAN DATA GURU)
                   InkWell(
@@ -744,7 +733,7 @@ class _DataSiswaState extends State<DataSiswa> {
                     onTap: tambahSiswa,
                     child: Container(
                       height: 38,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
                         color: primaryColor,
                         borderRadius: BorderRadius.circular(8),
@@ -758,7 +747,7 @@ class _DataSiswaState extends State<DataSiswa> {
                             size: 18,
                             color: Colors.white,
                           ),
-                          SizedBox(width: 5),
+                          SizedBox(width: 4),
                           Text(
                             'Tambah Siswa',
                             style: TextStyle(
@@ -1180,29 +1169,34 @@ class _DataSiswaState extends State<DataSiswa> {
   Widget _filterDropdown(
     String value,
     List<String> items,
-    ValueChanged<String?> onChanged, {
-    bool isPrimary = false,
-  }) {
+    ValueChanged<String?> onChanged,
+  ) {
     return Container(
       height: 38,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      width: 78,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: isPrimary ? primaryColor : fieldColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFCBD5E1),
+          width: 1.2,
+        ),
       ),
       alignment: Alignment.center,
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isDense: true,
-          icon: Icon(
+          isExpanded: true,
+          icon: const Icon(
             Icons.keyboard_arrow_down,
             size: 17,
-            color: isPrimary ? Colors.white : Colors.black,
+            color: Colors.black87,
           ),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 11,
-            color: isPrimary ? Colors.white : Colors.black,
+            color: Color(0xFF1E293B),
             fontWeight: FontWeight.w600,
           ),
           dropdownColor: Colors.white,
@@ -1211,10 +1205,9 @@ class _DataSiswaState extends State<DataSiswa> {
               value: item,
               child: Text(
                 item,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: item == value && isPrimary
-                      ? primaryColor
-                      : const Color(0xFF1E293B),
+                  color: const Color(0xFF1E293B),
                   fontWeight: item == value
                       ? FontWeight.bold
                       : FontWeight.normal,

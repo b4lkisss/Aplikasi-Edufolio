@@ -6,6 +6,8 @@ import 'data_guru.dart';
 import 'kategori_portofolio.dart';
 import 'grafik_statistik.dart';
 import '../siswa/portofolio_siswa.dart';
+import '../siswa/portofolio_data.dart';
+import '../notifikasi_screen.dart';
 
 class DashboardAdmin extends StatefulWidget {
   const DashboardAdmin({super.key});
@@ -19,6 +21,8 @@ class _DashboardAdminState extends State<DashboardAdmin> {
   static const Color primaryBlue = Color(0xFF254BD1); // Warna biru pekat
   static const Color cyanAccent = Color(0xFF38BDF8); // Warna aksen cyan
 
+  final PortofolioDataStore dataStore = PortofolioDataStore();
+
   int selectedMenu = 0;
   String selectedPeriod = 'This Month';
 
@@ -28,7 +32,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     {'icon': Icons.school_rounded, 'title': 'Data Guru'},
     {'icon': Icons.people_alt_rounded, 'title': 'Data Siswa'},
     {'icon': Icons.assignment_outlined, 'title': 'Kategori'},
-    {'icon': Icons.bar_chart_rounded, 'title': 'Statistik & Grafik'},
+    {'icon': Icons.bar_chart_rounded, 'title': 'Grafik'},
     {'icon': Icons.notifications_rounded, 'title': 'Notification'},
     {'icon': Icons.person_rounded, 'title': 'My Profile'},
   ];
@@ -52,6 +56,9 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                     builder: (context) => InkWell(
                       borderRadius: BorderRadius.circular(10),
                       onTap: () {
+                        setState(() {
+                          selectedMenu = 0;
+                        });
                         Scaffold.of(context).openDrawer();
                       },
                       child: Container(
@@ -130,10 +137,59 @@ class _DashboardAdminState extends State<DashboardAdmin> {
 
                   // NOTIFIKASI
                   IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: primaryBlue,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const NotifikasiScreen(role: 'admin'),
+                        ),
+                      );
+                    },
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(
+                          Icons.notifications_outlined,
+                          color: primaryBlue,
+                        ),
+                        ValueListenableBuilder<List<AppNotification>>(
+                          valueListenable: dataStore.notifications,
+                          builder: (context, notifs, _) {
+                            final unread = notifs
+                                .where((n) =>
+                                    !n.isRead &&
+                                    (n.roleTarget == 'all' ||
+                                        n.roleTarget == 'admin'))
+                                .length;
+                            if (unread == 0) return const SizedBox.shrink();
+                            return Positioned(
+                              right: -4,
+                              top: -4,
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 14,
+                                  minHeight: 14,
+                                ),
+                                child: Text(
+                                  '$unread',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -187,79 +243,89 @@ class _DashboardAdminState extends State<DashboardAdmin> {
               const SizedBox(height: 22),
 
               // STATISTIK DASHBOARD (2 BARIS: 1: TOTAL SISWA & TOTAL GURU, 2: PORTOFOLIO & PRESTASI)
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.15,
-                children: [
-                  // BARIS 1: TOTAL SISWA & TOTAL GURU
-                  _buildStatCard(
-                    Icons.school_rounded,
-                    'Total Siswa',
-                    '32',
-                    const Color(0xFF4F46E5), // Indigo
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DataSiswa(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildStatCard(
-                    Icons.people_alt_rounded,
-                    'Total Guru',
-                    '30',
-                    const Color(0xFF0D9488), // Teal
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DataGuru(),
-                        ),
-                      );
-                    },
-                  ),
-                  // BARIS 2: PORTOFOLIO & PRESTASI
-                  _buildStatCard(
-                    Icons.folder_rounded,
-                    'Portofolio',
-                    '150',
-                    const Color(0xFF2563EB), // Blue
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PortofolioSaya(
-                            title: 'Seluruh Portofolio',
-                            initialKategori: 'Semua',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildStatCard(
-                    Icons.emoji_events_rounded,
-                    'Prestasi',
-                    '28',
-                    const Color(0xFFFFA000), // Amber Gold
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PortofolioSaya(
-                            title: 'Portofolio Prestasi',
-                            initialKategori: 'Prestasi & Lomba',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+              ValueListenableBuilder<List<PortofolioItem>>(
+                valueListenable: dataStore.portofolioList,
+                builder: (context, allItems, _) {
+                  final totalPorto = allItems.length;
+                  final totalPrestasi = allItems
+                      .where((i) => i.kategori.contains('Prestasi'))
+                      .length;
+
+                  return GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.95,
+                    children: [
+                      // BARIS 1: TOTAL SISWA & TOTAL GURU
+                      _buildStatCard(
+                        Icons.school_rounded,
+                        'Total Siswa',
+                        '32',
+                        const Color(0xFF4F46E5), // Indigo
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DataSiswa(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildStatCard(
+                        Icons.people_alt_rounded,
+                        'Total Guru',
+                        '30',
+                        const Color(0xFF0D9488), // Teal
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DataGuru(),
+                            ),
+                          );
+                        },
+                      ),
+                      // BARIS 2: PORTOFOLIO & PRESTASI
+                      _buildStatCard(
+                        Icons.folder_rounded,
+                        'Portofolio',
+                        '$totalPorto',
+                        const Color(0xFF2563EB), // Blue
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PortofolioSaya(
+                                title: 'Seluruh Portofolio',
+                                initialKategori: 'Semua',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildStatCard(
+                        Icons.emoji_events_rounded,
+                        'Prestasi',
+                        '$totalPrestasi',
+                        const Color(0xFFFFA000), // Amber Gold
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PortofolioSaya(
+                                title: 'Portofolio Prestasi',
+                                initialKategori: 'Prestasi & Lomba',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 24),
@@ -432,11 +498,21 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                             builder: (context) => const KategoriPortofolio(),
                           ),
                         );
-                      } else if (item['title'] == 'Statistik & Grafik') {
+                      } else if (item['title'] == 'Grafik' ||
+                          item['title'] == 'Statistik & Grafik') {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const GrafikStatistik(),
+                          ),
+                        );
+                      } else if (item['title'] == 'Notification' ||
+                          item['title'] == 'Notifikasi') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const NotifikasiScreen(role: 'admin'),
                           ),
                         );
                       } else if (item['title'] == 'My Profile') {
@@ -549,13 +625,13 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     VoidCallback? onTap,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
           boxShadow: [
             BoxShadow(
@@ -566,14 +642,14 @@ class _DashboardAdminState extends State<DashboardAdmin> {
           ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // JUDUL DI ATAS (NAVY BOLD PERSIS CONTOH GAMBAR)
+            // JUDUL DI PALING ATAS
             Text(
               title,
               style: const TextStyle(
-                fontSize: 15.5,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1E3A8A),
               ),
@@ -581,19 +657,21 @@ class _DashboardAdminState extends State<DashboardAdmin> {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
-            // ICON LEBIH BESARRRR DI TENGAH (SIZE 64)
-            Icon(
-              icon,
-              size: 64,
-              color: iconColor,
+            // ICON LEBIH BESARRRRR DI TENGAH (UKURAN 92)
+            Expanded(
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: 92,
+                  color: iconColor,
+                ),
+              ),
             ),
-            const SizedBox(height: 6),
-            // ANGKA DI BAWAH (GREY SLATE BOLD)
+            // ANGKA DI PALING BAWAH
             Text(
               value,
               style: const TextStyle(
-                fontSize: 19,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF64748B),
               ),

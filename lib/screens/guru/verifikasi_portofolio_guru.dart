@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'detail_portofolio_guru.dart';
+import '../siswa/portofolio_data.dart';
+import '../notifikasi_screen.dart';
 
 class VerifikasiPortofolioGuru extends StatefulWidget {
   const VerifikasiPortofolioGuru({super.key});
@@ -10,125 +12,23 @@ class VerifikasiPortofolioGuru extends StatefulWidget {
 }
 
 class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
-  final Color primaryBlue = const Color(0xFF254BD1);
-  final Color successGreen = const Color(0xFF16A34A);
-  final Color dangerRed = const Color(0xFFDC2626);
-  final Color cardBg = const Color(0xFFE2E8F0);
+  static const Color primaryBlue = Color(0xFF254BD1);
+  static const Color successGreen = Color(0xFF16A34A);
+  static const Color dangerRed = Color(0xFFDC2626);
 
-  int selectedTab = 0; // 0: Menunggu, 1: Disetujui, 2: Ditolak
-  String selectedKategori = 'Semua Kategori';
+  final PortofolioDataStore dataStore = PortofolioDataStore();
   final TextEditingController searchController = TextEditingController();
 
-  int currentPage = 1;
+  int selectedTab = 0; // 0: Menunggu, 1: Disetujui, 2: Ditolak
+  String selectedKategori = 'Kategori';
+  String selectedSort = 'Terbaru'; // 'Terbaru' atau 'Terlama'
 
-  final List<Map<String, dynamic>> allSubmissions = [
-    {
-      'id': 1,
-      'nama_siswa': 'Balqis Demes Piscesa',
-      'kelas': 'XII RPL B',
-      'judul': 'Project Aplikasi Mobile',
-      'kategori': 'Project Karya',
-      'status': 'Menunggu',
-      'waktu': '2 Jam yang lalu',
-      'deskripsi':
-          'Mengembangkan aplikasi mobile e-commerce UMKM lokal menggunakan Flutter dan Firebase dengan fitur katalog produk, keranjang belanja, dan pembayaran payment gateway.',
-      'peran':
-          'Lead Mobile Developer - Membangun arsitektur state management dan integrasi API payment gateway.',
-      'skills': ['Flutter', 'Dart', 'Firebase', 'REST API', 'Figma'],
-      'link': 'https://github.com/balqis/project-mobile-edufolio',
-      'avatar':
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-      'thumbnail':
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-      'id': 2,
-      'nama_siswa': 'Balqis Demes Piscesa',
-      'kelas': 'XII RPL B',
-      'judul': 'Project Aplikasi Mobile',
-      'kategori': 'Project Karya',
-      'status': 'Menunggu',
-      'waktu': '3 Jam yang lalu',
-      'deskripsi':
-          'Pembuatan sistem manajemen perpustakaan sekolah berbasis Android untuk mempermudah peminjaman dan pengembalian buku dengan QR Code scanner.',
-      'peran': 'Frontend Developer - Desain antarmuka responsif dan implementasi scanner QR.',
-      'skills': ['Flutter', 'QR Scanner', 'UI/UX'],
-      'link': 'https://github.com/balqis/library-app',
-      'avatar':
-          'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80',
-      'thumbnail':
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-      'id': 3,
-      'nama_siswa': 'Balqis Demes Piscesa',
-      'kelas': 'XII RPL B',
-      'judul': 'Project Aplikasi Mobile',
-      'kategori': 'Project Karya',
-      'status': 'Menunggu',
-      'waktu': '5 Jam yang lalu',
-      'deskripsi':
-          'Aplikasi monitoring kehadiran siswa berbasis lokasi GPS dan validasi wajah.',
-      'peran': 'Mobile Developer & UI Designer.',
-      'skills': ['Flutter', 'GPS Location', 'REST API'],
-      'link': 'https://github.com/balqis/absensi-gps',
-      'avatar':
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-      'thumbnail':
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-      'id': 4,
-      'nama_siswa': 'Balqis Demes Piscesa',
-      'kelas': 'XII RPL B',
-      'judul': 'Project Aplikasi Mobile',
-      'kategori': 'Project Karya',
-      'status': 'Menunggu',
-      'waktu': '1 Hari yang lalu',
-      'deskripsi':
-          'Aplikasi portofolio digital berbasis Flutter Web dan Android.',
-      'peran': 'Fullstack Developer.',
-      'skills': ['Flutter', 'Supabase', 'Dart'],
-      'link': 'https://github.com/balqis/edufolio',
-      'avatar':
-          'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80',
-      'thumbnail':
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-      'id': 5,
-      'nama_siswa': 'Ahmad Fauzan',
-      'kelas': 'XII RPL A',
-      'judul': 'Sertifikat Flutter Developer',
-      'kategori': 'Sertifikat',
-      'status': 'Disetujui',
-      'waktu': '1 Hari yang lalu',
-      'deskripsi': 'Sertifikasi kompetensi keahlian Flutter dari Google Developer Groups.',
-      'peran': 'Peserta Ujian Sertifikasi.',
-      'skills': ['Flutter', 'State Management'],
-      'link': 'https://cert.dev/ahmad-fauzan',
-      'avatar':
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-      'thumbnail':
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-      'id': 6,
-      'nama_siswa': 'Siti Rahmawati',
-      'kelas': 'XI RPL A',
-      'judul': 'Juara 2 Lomba UI/UX',
-      'kategori': 'Prestasi & Lomba',
-      'status': 'Ditolak',
-      'waktu': '2 Hari yang lalu',
-      'deskripsi': 'Proposal desain aplikasi edukasi interaktif untuk anak SD.',
-      'peran': 'UI/UX Designer.',
-      'skills': ['Figma', 'Prototyping'],
-      'link': 'https://figma.com/file/sample',
-      'avatar':
-          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-      'thumbnail':
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-    },
+  final List<String> kategoriList = [
+    'Kategori',
+    'Prestasi & Lomba',
+    'Sertifikat',
+    'Projek',
+    'Organisasi',
   ];
 
   @override
@@ -137,13 +37,8 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
     super.dispose();
   }
 
-  void _updateStatus(int id, String status) {
-    setState(() {
-      final index = allSubmissions.indexWhere((element) => element['id'] == id);
-      if (index != -1) {
-        allSubmissions[index]['status'] = status;
-      }
-    });
+  void _updateStatus(String id, String status) {
+    dataStore.updateStatus(id, status);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -160,145 +55,228 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
 
   @override
   Widget build(BuildContext context) {
-    final statusFilter = selectedTab == 0
-        ? 'Menunggu'
-        : selectedTab == 1
-            ? 'Disetujui'
-            : 'Ditolak';
+    return ValueListenableBuilder<List<PortofolioItem>>(
+      valueListenable: dataStore.portofolioList,
+      builder: (context, allItems, _) {
+        final statusFilter = selectedTab == 0
+            ? 'Menunggu'
+            : selectedTab == 1
+                ? 'Disetujui'
+                : 'Ditolak';
 
-    final query = searchController.text.toLowerCase().trim();
+        final query = searchController.text.toLowerCase().trim();
 
-    final filteredList = allSubmissions.where((item) {
-      final matchStatus = item['status'] == statusFilter;
-      final matchQuery = query.isEmpty ||
-          (item['nama_siswa'] as String).toLowerCase().contains(query) ||
-          (item['judul'] as String).toLowerCase().contains(query);
-      final matchKategori = selectedKategori == 'Semua Kategori' ||
-          item['kategori'] == selectedKategori;
-      return matchStatus && matchQuery && matchKategori;
-    }).toList();
+        // Hitung total untuk badge tab
+        final totalMenunggu = allItems.where((i) => i.status == 'Menunggu').length;
+        final totalDisetujui = allItems.where((i) => i.status == 'Disetujui').length;
+        final totalDitolak = allItems.where((i) => i.status == 'Ditolak').length;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Verifikasi Portofolio',
-          style: TextStyle(
-            color: Color(0xFF1E293B),
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: Color(0xFF254BD1),
+        List<PortofolioItem> filteredList = allItems.where((item) {
+          final matchStatus = item.status == statusFilter;
+          final matchQuery = query.isEmpty ||
+              item.namaSiswa.toLowerCase().contains(query) ||
+              item.judul.toLowerCase().contains(query) ||
+              item.kategori.toLowerCase().contains(query) ||
+              item.kelas.toLowerCase().contains(query);
+          final matchKategori = selectedKategori == 'Kategori' ||
+              selectedKategori == 'Semua Kategori' ||
+              item.kategori.toLowerCase().contains(selectedKategori.toLowerCase()) ||
+              selectedKategori.toLowerCase().contains(item.kategori.toLowerCase());
+          return matchStatus && matchQuery && matchKategori;
+        }).toList();
+
+        if (selectedSort == 'Terlama') {
+          filteredList = filteredList.reversed.toList();
+        }
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
+              onPressed: () => Navigator.pop(context),
             ),
+            title: const Text(
+              'Verifikasi Portofolio',
+              style: TextStyle(
+                color: Color(0xFF1E293B),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            actions: [
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NotifikasiScreen(role: 'guru'),
+                    ),
+                  );
+                },
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: primaryBlue,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Column(
-                children: [
-                  // TABS STATUS
-                  Row(
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Column(
                     children: [
-                      _buildTabButton(0, 'Menunggu(25)'),
-                      const SizedBox(width: 8),
-                      _buildTabButton(1, 'Disetujui(30)'),
-                      const SizedBox(width: 8),
-                      _buildTabButton(2, 'Ditolak(40)'),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // SEARCH BAR
-                  Container(
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD9D9D9),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    alignment: Alignment.center,
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: (val) => setState(() {}),
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.search, color: Color(0xFF64748B), size: 20),
-                        hintText: 'Cari Nama Siswa / Judul Portofolio',
-                        hintStyle: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 13,
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
+                      // TABS STATUS DENGAN JUMLAH DINAMIS & TEPAT
+                      Row(
+                        children: [
+                          _buildTabButton(0, 'Menunggu ($totalMenunggu)'),
+                          const SizedBox(width: 8),
+                          _buildTabButton(1, 'Disetujui ($totalDisetujui)'),
+                          const SizedBox(width: 8),
+                          _buildTabButton(2, 'Ditolak ($totalDitolak)'),
+                        ],
                       ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 14),
+                      const SizedBox(height: 16),
 
-                  // FILTER KATEGORI CAPSULES
-                  Row(
-                    children: [
-                      _buildFilterCapsule('Semua Kategori'),
-                      const SizedBox(width: 10),
-                      _buildFilterCapsule('Terbaru'),
-                    ],
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // DAFTAR KARTU PENGAJUAN
-                  if (filteredList.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.folder_open_rounded,
-                              size: 48,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Tidak ada portofolio $statusFilter',
-                              style: const TextStyle(
-                                color: Color(0xFF64748B),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
+                      // SEARCH BAR SINKRON & JELAS
+                      Container(
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x05000000),
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
                             ),
                           ],
                         ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        alignment: Alignment.center,
+                        child: TextField(
+                          controller: searchController,
+                          onChanged: (_) => setState(() {}),
+                          style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
+                          decoration: InputDecoration(
+                            icon: const Icon(Icons.search_rounded, color: primaryBlue, size: 20),
+                            hintText: 'Cari Nama Siswa / Judul Portofolio',
+                            hintStyle: const TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 13,
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            suffixIcon: searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear_rounded, size: 16, color: Colors.grey),
+                                    onPressed: () {
+                                      setState(() {
+                                        searchController.clear();
+                                      });
+                                    },
+                                  )
+                                : null,
+                          ),
+                        ),
                       ),
-                    )
-                  else
-                    ...filteredList.map((item) => _buildSubmissionCard(item)),
-                ],
-              ),
-            ),
-          ),
 
-          // PAGINATION DI BAGIAN BAWAH
-          _buildPagination(),
-        ],
-      ),
+                      const SizedBox(height: 14),
+
+                      // TOMBOL SORT TERBARU & TERLAMA (DIPISAH) DAN DROPDOWN KATEGORI
+                      Row(
+                        children: [
+                          _buildSortButton('Terbaru'),
+                          const SizedBox(width: 8),
+                          _buildSortButton('Terlama'),
+                          const SizedBox(width: 8),
+
+                          // DROPDOWN FILTER KATEGORI
+                          Expanded(
+                            child: Container(
+                              height: 40,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: selectedKategori,
+                                  isExpanded: true,
+                                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: primaryBlue),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                  items: kategoriList.map((kat) {
+                                    return DropdownMenuItem<String>(
+                                      value: kat,
+                                      child: Text(
+                                        kat,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setState(() {
+                                        selectedKategori = val;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // DAFTAR KARTU PENGAJUAN
+                      if (filteredList.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.folder_open_rounded,
+                                  size: 48,
+                                  color: Colors.grey.shade400,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Tidak ada portofolio $statusFilter',
+                                  style: const TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        ...filteredList.map((item) => _buildSubmissionCard(item)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -316,14 +294,25 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
           padding: const EdgeInsets.symmetric(vertical: 10),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? primaryBlue : cardBg,
+            color: isSelected ? primaryBlue : Colors.white,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? primaryBlue : const Color(0xFFCBD5E1),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelected ? const Color(0x33254BD1) : const Color(0x05000000),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Text(
             label,
             style: TextStyle(
               color: isSelected ? Colors.white : const Color(0xFF1E293B),
-              fontSize: 12,
+              fontSize: 11.5,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -332,53 +321,32 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
     );
   }
 
-  Widget _buildFilterCapsule(String label) {
-    final bool isSelected = selectedKategori == label;
-    return Expanded(
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            selectedKategori = label;
-          });
-        },
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? primaryBlue : cardBg,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : const Color(0xFF1E293B),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSubmissionCard(Map<String, dynamic> item) {
+  Widget _buildSubmissionCard(PortofolioItem item) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
           InkWell(
+            borderRadius: BorderRadius.circular(10),
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DetailPortofolioGuru(portofolio: item),
+                  builder: (context) => DetailPortofolioGuru(portofolio: item.toMap()),
                 ),
               );
             },
@@ -387,8 +355,9 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
               children: [
                 // FOTO SISWA
                 CircleAvatar(
-                  radius: 22,
-                  backgroundImage: NetworkImage(item['avatar']),
+                  radius: 24,
+                  backgroundImage: NetworkImage(item.avatarUrl),
+                  backgroundColor: const Color(0xFFCBD5E1),
                 ),
                 const SizedBox(width: 12),
 
@@ -397,32 +366,67 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item['nama_siswa'],
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.namaSiswa,
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: item.status == 'Disetujui'
+                                  ? const Color(0xFFDCFCE7)
+                                  : item.status == 'Ditolak'
+                                      ? const Color(0xFFFEE2E2)
+                                      : const Color(0xFFFFEDD5),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              item.status,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: item.status == 'Disetujui'
+                                    ? successGreen
+                                    : item.status == 'Ditolak'
+                                        ? dangerRed
+                                        : const Color(0xFFEA580C),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       Text(
-                        item['kelas'],
+                        item.kelas,
                         style: const TextStyle(
                           fontSize: 11,
                           color: Color(0xFF64748B),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
-                        item['judul'],
+                        item.judul,
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1E293B),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 2),
                       Text(
-                        item['kategori'],
+                        '${item.kategori} • ${item.tanggalUnggah}',
                         style: const TextStyle(
                           fontSize: 11,
                           color: Color(0xFF64748B),
@@ -432,25 +436,30 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
                   ),
                 ),
 
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
 
                 // THUMBNAIL SERTIFIKAT / KARYA
-                Container(
-                  width: 70,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: NetworkImage(item['thumbnail']),
-                      fit: BoxFit.cover,
-                    ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 72,
+                    height: 54,
+                    color: const Color(0xFFF1F5F9),
+                    child: item.imageUrl != null
+                        ? Image.network(
+                            item.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.image, color: Colors.grey),
+                          )
+                        : const Icon(Icons.image, color: Colors.grey),
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
           // TOMBOL AKSI: SETUJU & TOLAK
           Row(
@@ -458,26 +467,31 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
             children: [
               // TOMBOL SETUJU (HIJAU)
               InkWell(
-                onTap: () => _updateStatus(item['id'], 'Disetujui'),
+                onTap: () => _updateStatus(item.id, 'Disetujui'),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                   decoration: BoxDecoration(
                     color: successGreen,
                     borderRadius: BorderRadius.circular(8),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x2416A34A),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_box_rounded,
-                          size: 14, color: Colors.white),
+                      Icon(Icons.check_box_rounded, size: 15, color: Colors.white),
                       SizedBox(width: 6),
                       Text(
                         'Setuju',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -490,26 +504,31 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
 
               // TOMBOL TOLAK (MERAH)
               InkWell(
-                onTap: () => _updateStatus(item['id'], 'Ditolak'),
+                onTap: () => _updateStatus(item.id, 'Ditolak'),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                   decoration: BoxDecoration(
                     color: dangerRed,
                     borderRadius: BorderRadius.circular(8),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x24DC2626),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.disabled_by_default_rounded,
-                          size: 14, color: Colors.white),
+                      Icon(Icons.disabled_by_default_rounded, size: 15, color: Colors.white),
                       SizedBox(width: 6),
                       Text(
                         'Tolak',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -524,45 +543,38 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
     );
   }
 
-  Widget _buildPagination() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const IconButton(
-            icon: Icon(Icons.chevron_left, size: 20, color: Color(0xFFCBD5E1)),
-            onPressed: null,
+  Widget _buildSortButton(String label) {
+    final bool isSelected = selectedSort == label;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () {
+        if (selectedSort != label) {
+          setState(() {
+            selectedSort = label;
+          });
+        }
+      },
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryBlue : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? primaryBlue : const Color(0xFFCBD5E1),
+            width: 1.2,
           ),
-          Container(
-            width: 28,
-            height: 28,
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: primaryBlue,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Text(
-              '1',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : const Color(0xFF64748B),
           ),
-          const IconButton(
-            icon: Icon(Icons.chevron_right, size: 20, color: Color(0xFFCBD5E1)),
-            onPressed: null,
-          ),
-        ],
+        ),
       ),
     );
   }
 }
-

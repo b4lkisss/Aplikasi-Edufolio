@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../services/image_picker_service.dart';
+import '../../widgets/pilih_foto_dialog.dart';
 import 'portofolio_data.dart';
 
 class ProfilSiswa extends StatefulWidget {
@@ -85,12 +86,25 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
   }
 
   Future<void> _pickAvatar() async {
-    final bytes = await AppImagePicker.pickImage();
-    if (bytes != null) {
-      setState(() {
-        selectedImageBytes = bytes;
-      });
-    }
+    PilihFotoDialog.show(
+      context,
+      onKamera: () async {
+        final bytes = await AppImagePicker.pickImage();
+        if (bytes != null) {
+          setState(() {
+            selectedImageBytes = bytes;
+          });
+        }
+      },
+      onFile: () async {
+        final bytes = await AppImagePicker.pickImage();
+        if (bytes != null) {
+          setState(() {
+            selectedImageBytes = bytes;
+          });
+        }
+      },
+    );
   }
 
   void _simpanProfil() {

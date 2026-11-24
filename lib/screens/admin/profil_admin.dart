@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../services/image_picker_service.dart';
+import '../../widgets/pilih_foto_dialog.dart';
 
 class ProfilAdmin extends StatefulWidget {
   const ProfilAdmin({super.key});
@@ -77,20 +78,41 @@ class _ProfilAdminState extends State<ProfilAdmin> {
 
   // FUNGSI 2: PICKER FOTO PROFIL (MEMBUKA FILE EXPLORER)
   Future<void> _pilihFoto() async {
-    final bytes = await AppImagePicker.pickImage();
-    if (bytes != null) {
-      setState(() {
-        fotoBytes = bytes;
-      });
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Foto profil berhasil diubah!'),
-          backgroundColor: Color(0xFF254BD1),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+    PilihFotoDialog.show(
+      context,
+      onKamera: () async {
+        final bytes = await AppImagePicker.pickImage();
+        if (bytes != null) {
+          setState(() {
+            fotoBytes = bytes;
+          });
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Foto profil berhasil diubah!'),
+              backgroundColor: Color(0xFF254BD1),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+      onFile: () async {
+        final bytes = await AppImagePicker.pickImage();
+        if (bytes != null) {
+          setState(() {
+            fotoBytes = bytes;
+          });
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Foto profil berhasil diubah!'),
+              backgroundColor: Color(0xFF254BD1),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+    );
   }
 
   // FUNGSI SIMPAN PROFIL

@@ -6,6 +6,7 @@ import 'portofolio_siswa.dart';
 import 'detail_portofolio_siswa.dart';
 import 'tambah_portofolio_siswa.dart';
 import 'status_verifikasi_siswa.dart';
+import '../notifikasi_screen.dart';
 
 class DashboardSiswa extends StatefulWidget {
   const DashboardSiswa({super.key});
@@ -111,17 +112,59 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                   // NOTIFIKASI
                   IconButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Tidak ada notifikasi baru.'),
-                          duration: Duration(seconds: 2),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const NotifikasiScreen(role: 'siswa'),
                         ),
                       );
                     },
-                    icon: const Icon(
-                      Icons.notifications_rounded,
-                      color: primaryBlue,
-                      size: 26,
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(
+                          Icons.notifications_rounded,
+                          color: primaryBlue,
+                          size: 26,
+                        ),
+                        ValueListenableBuilder<List<AppNotification>>(
+                          valueListenable: dataStore.notifications,
+                          builder: (context, notifs, _) {
+                            final unread = notifs
+                                .where((n) =>
+                                    !n.isRead &&
+                                    (n.roleTarget == 'all' ||
+                                        n.roleTarget == 'siswa'))
+                                .length;
+                            if (unread == 0) return const SizedBox.shrink();
+                            return Positioned(
+                              right: -4,
+                              top: -4,
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 14,
+                                  minHeight: 14,
+                                ),
+                                child: Text(
+                                  '$unread',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -278,7 +321,7 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.15,
+                    childAspectRatio: 0.95,
                     children: [
                       // BARIS 1: TOTAL KARYA & ORGANISASI
                       _buildAdminStyleStatCard(
@@ -362,88 +405,124 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
 
               const SizedBox(height: 10),
 
-              // CARD STATUS VERIFIKASI TERBARU
-              InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () {
-                  final item = dataStore.portofolioList.value.firstWhere(
-                    (i) => i.status == 'Menunggu',
-                    orElse: () => dataStore.portofolioList.value.first,
-                  );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          DetailPortofolioSiswa(portofolio: item),
+              // CARD STATUS VERIFIKASI TERBARU (SINKRON REAL-TIME DARI DATA STORE)
+              ValueListenableBuilder<List<PortofolioItem>>(
+                valueListenable: dataStore.portofolioList,
+                builder: (context, items, _) {
+                  if (items.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  final item = items.first;
+                  final isMenunggu = item.status == 'Menunggu';
+                  final isDitolak = item.status == 'Ditolak';
+
+                  Color iconBg = isMenunggu
+                      ? const Color(0xFFFFEDD5)
+                      : (isDitolak
+                          ? const Color(0xFFFEE2E2)
+                          : const Color(0xFFDCFCE7));
+                  Color iconColor = isMenunggu
+                      ? const Color(0xFFEA580C)
+                      : (isDitolak
+                          ? const Color(0xFFDC2626)
+                          : const Color(0xFF16A34A));
+                  IconData icon = isMenunggu
+                      ? Icons.access_time_filled_rounded
+                      : (isDitolak
+                          ? Icons.cancel_rounded
+                          : Icons.check_circle_rounded);
+
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              DetailPortofolioSiswa(portofolio: item),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFFE2E8F0),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: iconBg,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              icon,
+                              color: iconColor,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.judul,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  isMenunggu
+                                      ? 'Menunggu Verifikasi Guru'
+                                      : (isDitolak
+                                          ? 'Ditolak: ${item.catatan ?? "Perlu revisi"}'
+                                          : 'Disetujui'),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: iconColor,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Diunggah: ${item.tanggalUnggah}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x14000000),
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      // ICON JAM PASIR ORANGE
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF7ED),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.hourglass_top_rounded,
-                          color: Color(0xFFF97316),
-                          size: 26,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Sertifikat Web Design',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            SizedBox(height: 3),
-                            Text(
-                              'Menunggu Verifikasi Admin',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF334155),
-                              ),
-                            ),
-                            SizedBox(height: 3),
-                            Text(
-                              'Diunggah 12 April 2025',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
 
               const SizedBox(height: 22),
@@ -549,13 +628,13 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
     required VoidCallback onTap,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
           boxShadow: [
             BoxShadow(
@@ -566,14 +645,14 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
           ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // JUDUL DI ATAS (NAVY BOLD PERSIS CONTOH GAMBAR)
+            // JUDUL DI PALING ATAS
             Text(
               title,
               style: const TextStyle(
-                fontSize: 15.5,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1E3A8A),
               ),
@@ -581,19 +660,21 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
-            // ICON LEBIH BESARRRR DI TENGAH (SIZE 64)
-            Icon(
-              icon,
-              size: 64,
-              color: iconColor,
+            // ICON LEBIH BESARRRRR DI TENGAH (UKURAN 92)
+            Expanded(
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: 92,
+                  color: iconColor,
+                ),
+              ),
             ),
-            const SizedBox(height: 6),
-            // ANGKA DI BAWAH (GREY SLATE BOLD)
+            // ANGKA DI PALING BAWAH
             Text(
               value,
               style: const TextStyle(
-                fontSize: 19,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF64748B),
               ),
@@ -710,6 +791,20 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const StatusVerifikasiSiswa(),
+                  ),
+                );
+              },
+            ),
+            _drawerItem(
+              icon: Icons.notifications_rounded,
+              title: 'Notifikasi',
+              isSelected: false,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotifikasiScreen(role: 'siswa'),
                   ),
                 );
               },

@@ -5,6 +5,8 @@ import 'data_siswa_guru.dart';
 import 'verifikasi_portofolio_guru.dart';
 import 'detail_portofolio_guru.dart';
 import '../siswa/portofolio_siswa.dart';
+import '../siswa/portofolio_data.dart';
+import '../notifikasi_screen.dart';
 
 class DashboardGuru extends StatefulWidget {
   const DashboardGuru({super.key});
@@ -18,6 +20,8 @@ class _DashboardGuruState extends State<DashboardGuru> {
   static const Color cyanAccent = Color(0xFF38BDF8);
   static const Color cardBg = Color(0xFFE2E8F0);
 
+  final PortofolioDataStore dataStore = PortofolioDataStore();
+
   int selectedMenu = 0;
   String selectedPeriod = 'This Month';
 
@@ -25,6 +29,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
     {'icon': Icons.grid_view_rounded, 'title': 'Dashboard'},
     {'icon': Icons.group_rounded, 'title': 'Data Siswa'},
     {'icon': Icons.assignment_turned_in_rounded, 'title': 'Verifikasi Portofolio'},
+    {'icon': Icons.notifications_rounded, 'title': 'Notifikasi'},
     {'icon': Icons.person_rounded, 'title': 'Profil Guru'},
   ];
 
@@ -104,6 +109,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () {
+                        setState(() { selectedMenu = 0; });
                         Scaffold.of(btnContext).openDrawer();
                       },
                     ),
@@ -167,10 +173,59 @@ class _DashboardGuruState extends State<DashboardGuru> {
 
                   // NOTIFIKASI
                   IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: primaryBlue,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const NotifikasiScreen(role: 'guru'),
+                        ),
+                      );
+                    },
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(
+                          Icons.notifications_outlined,
+                          color: primaryBlue,
+                        ),
+                        ValueListenableBuilder<List<AppNotification>>(
+                          valueListenable: dataStore.notifications,
+                          builder: (context, notifs, _) {
+                            final unread = notifs
+                                .where((n) =>
+                                    !n.isRead &&
+                                    (n.roleTarget == 'all' ||
+                                        n.roleTarget == 'guru'))
+                                .length;
+                            if (unread == 0) return const SizedBox.shrink();
+                            return Positioned(
+                              right: -4,
+                              top: -4,
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 14,
+                                  minHeight: 14,
+                                ),
+                                child: Text(
+                                  '$unread',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -229,80 +284,92 @@ class _DashboardGuruState extends State<DashboardGuru> {
               const SizedBox(height: 18),
 
               // 4 KARTU STATISTIK (2 BARIS: 1: TOTAL SISWA & MENUNGGU, 2: PORTOFOLIO & PRESTASI)
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.15,
-                children: [
-                  // BARIS 1: TOTAL SISWA & MENUNGGU
-                  _buildStatCard(
-                    icon: Icons.people_alt_rounded,
-                    title: 'Total Siswa',
-                    value: '32',
-                    iconColor: const Color(0xFF4F46E5),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DataSiswaGuru(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildStatCard(
-                    icon: Icons.access_time_filled_rounded,
-                    title: 'Menunggu',
-                    value: '30',
-                    iconColor: const Color(0xFF0D9488),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const VerifikasiPortofolioGuru(),
-                        ),
-                      );
-                    },
-                  ),
-                  // BARIS 2: PORTOFOLIO & PRESTASI
-                  _buildStatCard(
-                    icon: Icons.folder_rounded,
-                    title: 'Portofolio',
-                    value: '150',
-                    iconColor: const Color(0xFF2563EB),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PortofolioSaya(
-                            title: 'Seluruh Portofolio',
-                            initialKategori: 'Semua',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildStatCard(
-                    icon: Icons.emoji_events_rounded,
-                    title: 'Prestasi',
-                    value: '28',
-                    iconColor: const Color(0xFFFFA000),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PortofolioSaya(
-                            title: 'Portofolio Prestasi',
-                            initialKategori: 'Prestasi & Lomba',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+              ValueListenableBuilder<List<PortofolioItem>>(
+                valueListenable: dataStore.portofolioList,
+                builder: (context, allItems, _) {
+                  final totalMenunggu =
+                      allItems.where((i) => i.status == 'Menunggu').length;
+                  final totalPorto = allItems.length;
+                  final totalPrestasi = allItems
+                      .where((i) => i.kategori.contains('Prestasi'))
+                      .length;
+
+                  return GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.95,
+                    children: [
+                      // BARIS 1: TOTAL SISWA & MENUNGGU
+                      _buildStatCard(
+                        icon: Icons.people_alt_rounded,
+                        title: 'Total Siswa',
+                        value: '32',
+                        iconColor: const Color(0xFF4F46E5),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DataSiswaGuru(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildStatCard(
+                        icon: Icons.access_time_filled_rounded,
+                        title: 'Menunggu',
+                        value: '$totalMenunggu',
+                        iconColor: const Color(0xFFEA580C),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const VerifikasiPortofolioGuru(),
+                            ),
+                          );
+                        },
+                      ),
+                      // BARIS 2: PORTOFOLIO & PRESTASI
+                      _buildStatCard(
+                        icon: Icons.folder_rounded,
+                        title: 'Portofolio',
+                        value: '$totalPorto',
+                        iconColor: const Color(0xFF2563EB),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PortofolioSaya(
+                                title: 'Seluruh Portofolio',
+                                initialKategori: 'Semua',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildStatCard(
+                        icon: Icons.emoji_events_rounded,
+                        title: 'Prestasi',
+                        value: '$totalPrestasi',
+                        iconColor: const Color(0xFFFFA000),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PortofolioSaya(
+                                title: 'Portofolio Prestasi',
+                                initialKategori: 'Prestasi & Lomba',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 22),
@@ -346,8 +413,59 @@ class _DashboardGuruState extends State<DashboardGuru> {
 
               const SizedBox(height: 12),
 
-              // LIST PENGAJUAN
-              ...pengajuanMenunggu.map((item) => _buildPengajuanCard(item)),
+              // LIST PENGAJUAN (SINKRON DARI DATA STORE)
+              ValueListenableBuilder<List<PortofolioItem>>(
+                valueListenable: dataStore.portofolioList,
+                builder: (context, items, _) {
+                  final pendingItems =
+                      items.where((i) => i.status == 'Menunggu').take(3).toList();
+
+                  if (pendingItems.isEmpty) {
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 40,
+                            color: Color(0xFF10B981),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Semua Pengajuan Sudah Diverifikasi',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Tidak ada pengajuan portofolio yang menunggu antrean saat ini.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: pendingItems
+                        .map((item) => _buildPengajuanCard(item.toMap()))
+                        .toList(),
+                  );
+                },
+              ),
 
               const SizedBox(height: 20),
             ],
@@ -366,13 +484,13 @@ class _DashboardGuruState extends State<DashboardGuru> {
     VoidCallback? onTap,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
           boxShadow: [
             BoxShadow(
@@ -383,14 +501,14 @@ class _DashboardGuruState extends State<DashboardGuru> {
           ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // JUDUL DI ATAS (NAVY BOLD PERSIS CONTOH GAMBAR)
+            // JUDUL DI PALING ATAS
             Text(
               title,
               style: const TextStyle(
-                fontSize: 15.5,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1E3A8A),
               ),
@@ -398,19 +516,21 @@ class _DashboardGuruState extends State<DashboardGuru> {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
-            // ICON LEBIH BESARRRR DI TENGAH (SIZE 64)
-            Icon(
-              icon,
-              size: 64,
-              color: iconColor,
+            // ICON LEBIH BESARRRRR DI TENGAH (UKURAN 92)
+            Expanded(
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: 92,
+                  color: iconColor,
+                ),
+              ),
             ),
-            const SizedBox(height: 6),
-            // ANGKA DI BAWAH (GREY SLATE BOLD)
+            // ANGKA DI PALING BAWAH
             Text(
               value,
               style: const TextStyle(
-                fontSize: 19,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF64748B),
               ),
@@ -421,13 +541,21 @@ class _DashboardGuruState extends State<DashboardGuru> {
     );
   }
 
-  // WIDGET KARTU PENGAJUAN MENUNGGU
+  // WIDGET KARTU PENGAJUAN MENUNGGU (CARD BERSIH PUTIH DENGAN BORDER & SHADOW)
   Widget _buildPengajuanCard(Map<String, dynamic> item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -446,7 +574,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
               // FOTO SISWA
               CircleAvatar(
                 radius: 22,
-                backgroundImage: NetworkImage(item['avatar']),
+                backgroundImage: NetworkImage(item['avatar'] ?? ''),
               ),
               const SizedBox(width: 12),
 
@@ -459,7 +587,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: item['nama_siswa'],
+                            text: item['nama_siswa'] ?? '',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -467,7 +595,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
                             ),
                           ),
                           TextSpan(
-                            text: '  (${item['kelas']})',
+                            text: '  (${item['kelas'] ?? ''})',
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF64748B),
@@ -478,7 +606,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      item['judul'],
+                      item['judul'] ?? '',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -487,7 +615,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      item['waktu'],
+                      item['waktu'] ?? '',
                       style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFF64748B),
@@ -499,20 +627,21 @@ class _DashboardGuruState extends State<DashboardGuru> {
 
               const SizedBox(width: 8),
 
-              // BADGE "MENUNGGU"
+              // BADGE "MENUNGGU" (WARNA OREN SESUAI PERMINTAAN USER)
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE2E5),
+                  color: const Color(0xFFFFEDD5),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFED7AA)),
                 ),
                 child: const Text(
                   'Menunggu',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFEF4444),
+                    color: Color(0xFFEA580C),
                   ),
                 ),
               ),
@@ -620,6 +749,15 @@ class _DashboardGuruState extends State<DashboardGuru> {
                             ),
                           );
                         } else if (index == 3) {
+                          // Notifikasi
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const NotifikasiScreen(role: 'guru'),
+                            ),
+                          );
+                        } else if (index == 4) {
                           // Profil Guru
                           Navigator.push(
                             context,

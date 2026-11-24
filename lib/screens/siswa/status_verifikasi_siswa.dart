@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'portofolio_data.dart';
 import 'detail_portofolio_siswa.dart';
+import '../notifikasi_screen.dart';
 
 class StatusVerifikasiSiswa extends StatefulWidget {
   final String? initialStatus;
@@ -57,7 +58,63 @@ class _StatusVerifikasiSiswaState extends State<StatusVerifikasiSiswa> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: const [],
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotifikasiScreen(role: 'siswa'),
+                ),
+              );
+            },
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(
+                  Icons.notifications_rounded,
+                  color: primaryBlue,
+                  size: 26,
+                ),
+                ValueListenableBuilder<List<AppNotification>>(
+                  valueListenable: dataStore.notifications,
+                  builder: (context, notifs, _) {
+                    final unread = notifs
+                        .where((n) =>
+                            !n.isRead &&
+                            (n.roleTarget == 'all' || n.roleTarget == 'siswa'))
+                        .length;
+                    if (unread == 0) return const SizedBox.shrink();
+                    return Positioned(
+                      right: -3,
+                      top: -3,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 14,
+                          minHeight: 14,
+                        ),
+                        child: Text(
+                          '$unread',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       body: ValueListenableBuilder<List<PortofolioItem>>(
         valueListenable: dataStore.portofolioList,
@@ -196,16 +253,16 @@ class _StatusVerifikasiSiswaState extends State<StatusVerifikasiSiswa> {
 
     if (isMenunggu) {
       iconBg = const Color(0xFFFFEDD5);
-      iconColor = const Color(0xFFF97316);
-      iconData = Icons.emoji_events_outlined;
+      iconColor = const Color(0xFFEA580C);
+      iconData = Icons.access_time_filled_rounded;
 
-      badgeBg = const Color(0xFFFEF3C7);
-      badgeTextColor = const Color(0xFFD97706);
+      badgeBg = const Color(0xFFFFEDD5);
+      badgeTextColor = const Color(0xFFEA580C);
       badgeText = 'Menunggu Verifikasi';
     } else if (isDitolak) {
       iconBg = const Color(0xFFFEE2E2);
       iconColor = const Color(0xFFEF4444);
-      iconData = Icons.assignment_late_outlined;
+      iconData = Icons.cancel_rounded;
 
       badgeBg = const Color(0xFFFEE2E2);
       badgeTextColor = const Color(0xFFDC2626);
@@ -213,10 +270,10 @@ class _StatusVerifikasiSiswaState extends State<StatusVerifikasiSiswa> {
     } else {
       // Disetujui
       iconBg = const Color(0xFFDCFCE7);
-      iconColor = const Color(0xFF22C55E);
-      iconData = Icons.verified_outlined;
+      iconColor = const Color(0xFF16A34A);
+      iconData = Icons.check_circle_rounded;
 
-      badgeBg = const Color(0xFFBBF7D0);
+      badgeBg = const Color(0xFFDCFCE7);
       badgeTextColor = const Color(0xFF16A34A);
       badgeText = 'Disetujui';
     }
@@ -234,8 +291,16 @@ class _StatusVerifikasiSiswaState extends State<StatusVerifikasiSiswa> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: cardBg,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -831,7 +831,7 @@ class _DataGuruState extends State<DataGuru> {
                     },
 
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB0C8DF),
+                      backgroundColor: const Color(0xFF254BD1),
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -1534,28 +1534,26 @@ class _DataGuruState extends State<DataGuru> {
                         horizontal: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: selectedBidang != 'Semua Bidang'
-                            ? primaryColor
-                            : fieldColor,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFFCBD5E1),
+                          width: 1.2,
+                        ),
                       ),
                       alignment: Alignment.center,
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: selectedBidang,
                           isExpanded: true,
-                          icon: Icon(
+                          icon: const Icon(
                             Icons.keyboard_arrow_down,
-                            color: selectedBidang != 'Semua Bidang'
-                                ? Colors.white
-                                : Colors.black,
+                            color: Colors.black87,
                             size: 18,
                           ),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11.5,
-                            color: selectedBidang != 'Semua Bidang'
-                                ? Colors.white
-                                : Colors.black,
+                            color: Color(0xFF1E293B),
                             fontWeight: FontWeight.w600,
                           ),
                           dropdownColor: Colors.white,
@@ -1570,10 +1568,7 @@ class _DataGuruState extends State<DataGuru> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: item == selectedBidang &&
-                                          selectedBidang != 'Semua Bidang'
-                                      ? primaryColor
-                                      : const Color(0xFF1E293B),
+                                  color: const Color(0xFF1E293B),
                                   fontWeight: item == selectedBidang
                                       ? FontWeight.bold
                                       : FontWeight.normal,

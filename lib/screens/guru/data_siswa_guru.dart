@@ -14,9 +14,9 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
 
   final TextEditingController searchController = TextEditingController();
 
-  String selectedKelas = 'Semua Kelas';
-  String selectedJurusan = 'Semua Jurusan';
-  String selectedAngkatan = 'Semua Angkatan';
+  String selectedKelas = 'Kelas';
+  String selectedJurusan = 'Jurusan';
+  String selectedAngkatan = 'Angkatan';
 
   int currentPage = 1;
   final int itemsPerPage = 8;
@@ -103,13 +103,16 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
           (siswa['nisn'] as String).toLowerCase().contains(query);
       final matchSearch = matchNama || matchNisn;
 
-      final matchKelas = selectedKelas == 'Semua Kelas' ||
+      final matchKelas = selectedKelas == 'Kelas' ||
+          selectedKelas == 'Semua Kelas' ||
           siswa['kelas'].toString().contains(selectedKelas.replaceAll('Kelas ', ''));
 
-      final matchJurusan = selectedJurusan == 'Semua Jurusan' ||
+      final matchJurusan = selectedJurusan == 'Jurusan' ||
+          selectedJurusan == 'Semua Jurusan' ||
           siswa['jurusan'] == selectedJurusan;
 
-      final matchAngkatan = selectedAngkatan == 'Semua Angkatan' ||
+      final matchAngkatan = selectedAngkatan == 'Angkatan' ||
+          selectedAngkatan == 'Semua Angkatan' ||
           siswa['angkatan'] == selectedAngkatan;
 
       return matchSearch && matchKelas && matchJurusan && matchAngkatan;
@@ -191,7 +194,7 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
                         child: _buildDropdownFilter(
                           value: selectedKelas,
                           items: const [
-                            'Semua Kelas',
+                            'Kelas',
                             'Kelas X',
                             'Kelas XI',
                             'Kelas XII',
@@ -211,7 +214,7 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
                         child: _buildDropdownFilter(
                           value: selectedJurusan,
                           items: const [
-                            'Semua Jurusan',
+                            'Jurusan',
                             'RPL',
                             'TKJ',
                             'DKV',
@@ -231,7 +234,7 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
                         child: _buildDropdownFilter(
                           value: selectedAngkatan,
                           items: const [
-                            'Semua Angkatan',
+                            'Angkatan',
                             '2024',
                             '2025',
                             '2026',

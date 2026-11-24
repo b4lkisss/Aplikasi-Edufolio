@@ -139,27 +139,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // SUBTITLE INTRO
-                Center(
-                  child: Text(
-                    'Lengkapi data diri Anda untuk mulai\nmembuat dan mengelola portofolio digital.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: Colors.grey.shade600,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
                 // NAMA LENGKAP
                 _buildTextField(
                   label: 'Nama Lengkap',

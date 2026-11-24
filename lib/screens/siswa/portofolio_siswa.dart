@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'portofolio_data.dart';
 import 'detail_portofolio_siswa.dart';
 import 'tambah_portofolio_siswa.dart';
+import '../notifikasi_screen.dart';
 
 class PortofolioSaya extends StatefulWidget {
   final String? initialKategori;
@@ -21,11 +22,12 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
   final dataStore = PortofolioDataStore();
 
   late String selectedKategori;
+  String selectedSort = 'Terbaru'; // 'Terbaru' atau 'Terlama'
   int currentPage = 1;
   final int itemsPerPage = 8;
 
   final List<String> kategoriList = [
-    'Semua',
+    'Kategori',
     'Prestasi & Lomba',
     'Sertifikat',
     'Projek',
@@ -35,9 +37,12 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
   @override
   void initState() {
     super.initState();
-    selectedKategori = widget.initialKategori ?? 'Semua';
+    selectedKategori = widget.initialKategori ?? 'Kategori';
+    if (selectedKategori == 'Semua' || selectedKategori == 'Semua Kategori') {
+      selectedKategori = 'Kategori';
+    }
     if (!kategoriList.contains(selectedKategori)) {
-      selectedKategori = 'Semua';
+      selectedKategori = 'Kategori';
     }
   }
 
@@ -68,19 +73,59 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.notifications_rounded,
-              color: primaryBlue,
-              size: 26,
-            ),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Tidak ada notifikasi baru.'),
-                  duration: Duration(seconds: 2),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotifikasiScreen(role: 'siswa'),
                 ),
               );
             },
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(
+                  Icons.notifications_rounded,
+                  color: primaryBlue,
+                  size: 26,
+                ),
+                ValueListenableBuilder<List<AppNotification>>(
+                  valueListenable: dataStore.notifications,
+                  builder: (context, notifs, _) {
+                    final unread = notifs
+                        .where((n) =>
+                            !n.isRead &&
+                            (n.roleTarget == 'all' || n.roleTarget == 'siswa'))
+                        .length;
+                    if (unread == 0) return const SizedBox.shrink();
+                    return Positioned(
+                      right: -3,
+                      top: -3,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 14,
+                          minHeight: 14,
+                        ),
+                        child: Text(
+                          '$unread',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -103,14 +148,21 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
         builder: (context, allItems, _) {
           // FILTER BERDASARKAN KATEGORI & PENCARIAN
           final query = searchController.text.trim().toLowerCase();
-          final filtered = allItems.where((item) {
-            final matchesKategori = selectedKategori == 'Semua' ||
-                item.kategori.toLowerCase() == selectedKategori.toLowerCase();
+          List<PortofolioItem> filtered = allItems.where((item) {
+            final matchesKategori = selectedKategori == 'Kategori' ||
+                selectedKategori == 'Semua Kategori' ||
+                selectedKategori == 'Semua' ||
+                item.kategori.toLowerCase().contains(selectedKategori.toLowerCase()) ||
+                selectedKategori.toLowerCase().contains(item.kategori.toLowerCase());
             final matchesQuery = query.isEmpty ||
                 item.judul.toLowerCase().contains(query) ||
                 item.deskripsi.toLowerCase().contains(query);
             return matchesKategori && matchesQuery;
           }).toList();
+
+          if (selectedSort == 'Terlama') {
+            filtered = filtered.reversed.toList();
+          }
 
           // PAGINATION
           final totalPages =
@@ -181,53 +233,67 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
                 ),
               ),
 
-              // TAB FILTER KATEGORI (HORIZONTAL SCROLL)
-              SizedBox(
-                height: 42,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  itemCount: kategoriList.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final kat = kategoriList[index];
-                    final isSelected = selectedKategori == kat;
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () {
-                        setState(() {
-                          selectedKategori = kat;
-                          currentPage = 1;
-                        });
-                      },
+              // TAB TERBARU/TERLAMA DI KIRI DAN DROPDOWN KATEGORI DI KANAN
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Row(
+                  children: [
+                    // TOMBOL SORT TERBARU & TERLAMA (DIPISAH) DAN DROPDOWN KATEGORI
+                    _buildSortButton('Terbaru'),
+                    const SizedBox(width: 8),
+                    _buildSortButton('Terlama'),
+                    const SizedBox(width: 8),
+
+                    // DROPDOWN FILTER KATEGORI
+                    Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
+                        height: 40,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: isSelected ? primaryBlue : inactivePillBg,
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
                         ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          kat,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected
-                                ? Colors.white
-                                : const Color(0xFF334155),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedKategori,
+                            isExpanded: true,
+                            icon: const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: primaryBlue,
+                              size: 20,
+                            ),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E293B),
+                            ),
+                            items: kategoriList.map((kat) {
+                              return DropdownMenuItem<String>(
+                                value: kat,
+                                child: Text(
+                                  kat,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  selectedKategori = val;
+                                  currentPage = 1;
+                                });
+                              }
+                            },
                           ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // LIST ITEM PORTOFOLIO
               Expanded(
@@ -291,35 +357,42 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
         );
       },
       child: Container(
-        padding: const EdgeInsets.all(12),
+        height: 86, // Ukuran card disamakan seragam
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x14000000),
-              blurRadius: 10,
-              offset: Offset(0, 3),
+              color: Color(0x0C000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           children: [
-            // GAMBAR THUMBNAIL
+            // GAMBAR THUMBNAIL BERUKURAN SAMA
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Container(
+              child: SizedBox(
                 width: 85,
-                height: 60,
-                color: const Color(0xFFE2E8F0),
+                height: 64,
                 child: item.imageUrl != null
                     ? Image.network(
                         item.imageUrl!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.image, color: Colors.grey),
+                            Container(
+                          color: const Color(0xFFF1F5F9),
+                          child: const Icon(Icons.image_outlined, color: Colors.grey),
+                        ),
                       )
-                    : const Icon(Icons.image, color: Colors.grey),
+                    : Container(
+                        color: const Color(0xFFF1F5F9),
+                        child: const Icon(Icons.image_outlined, color: Colors.grey),
+                      ),
               ),
             ),
             const SizedBox(width: 14),
@@ -327,26 +400,29 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
             // JUDUL DAN KATEGORI
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     item.judul,
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF0F172A),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
                   Text(
                     item.kategori,
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF334155),
+                      color: Color(0xFF64748B),
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -492,6 +568,42 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSortButton(String label) {
+    final bool isSelected = selectedSort == label;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () {
+        if (selectedSort != label) {
+          setState(() {
+            selectedSort = label;
+            currentPage = 1;
+          });
+        }
+      },
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryBlue : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? primaryBlue : const Color(0xFFCBD5E1),
+            width: 1.2,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : const Color(0xFF64748B),
+          ),
+        ),
+      ),
     );
   }
 }
