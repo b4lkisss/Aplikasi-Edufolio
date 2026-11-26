@@ -754,7 +754,7 @@ class _DataGuruState extends State<DataGuru> {
               // NONAKTIFKAN AKUN
               _menuAksiItem(
                 Icons.toggle_on,
-                guru['aktif']
+                (guru['aktif'] ?? true)
                     ? 'Nonaktifkan Akun'
                     : 'Aktifkan Akun',
                 Colors.black,
@@ -1805,10 +1805,10 @@ class _DataGuruState extends State<DataGuru> {
                     const SizedBox(height: 4),
 
                     Text(
-                      guru['bidang'],
+                      guru['bidang'] ?? '',
                       style: TextStyle(
                         fontSize: 10,
-                        color: guru['aktif']
+                        color: (guru['aktif'] ?? true)
                             ? Colors.black54
                             : Colors.red,
                         fontWeight: FontWeight.w500,
@@ -1820,7 +1820,7 @@ class _DataGuruState extends State<DataGuru> {
               ),
 
               // STATUS NONAKTIF
-              if (!guru['aktif'])
+              if (!(guru['aktif'] ?? true))
                 const Padding(
                   padding: EdgeInsets.only(right: 4),
                   child: Text(

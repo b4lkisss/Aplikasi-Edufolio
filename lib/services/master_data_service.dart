@@ -34,6 +34,9 @@ class MasterDataService {
           'nip': item['nip'] ?? '',
           'password': item['password'] ?? '',
           'jenis_kelamin': item['jenis_kelamin'] ?? 'Laki-laki',
+          'gender': item['jenis_kelamin'] ?? 'Laki-laki',
+          'telepon': item['no_telepon'] ?? '-',
+          'aktif': (item['aktif'] as bool?) ?? true,
           'avatarUrl': resolvedAvatar,
         });
       }
@@ -153,9 +156,12 @@ class MasterDataService {
           'jurusan': item['jurusan'] ?? 'RPL',
           'angkatan': item['tahun_ajaran'] ?? '2024',
           'no_telepon': item['no_telepon'] ?? '',
+          'telepon': item['no_telepon'] ?? '',
           'jenis_kelamin': item['jenis_kelamin'] ?? 'Laki-laki',
+          'gender': item['jenis_kelamin'] ?? 'Laki-laki',
           'password': item['password'] ?? '',
           'username': item['username'] ?? '',
+          'avatar': (item['jenis_kelamin']?.toString().toLowerCase() == 'perempuan') ? 0 : 1,
           'avatarUrl': resolvedAvatar,
         });
       }
