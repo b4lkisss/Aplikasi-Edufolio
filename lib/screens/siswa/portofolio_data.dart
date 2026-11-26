@@ -261,7 +261,7 @@ class PortofolioDataStore {
     }
   }
 
-  void addPortofolio(PortofolioItem item) {
+  void addPortofolio(PortofolioItem item, {bool syncToSupabase = true}) {
     portofolioList.value = [item, ...portofolioList.value];
 
     // Tambahkan notifikasi otomatis untuk Guru & Admin
@@ -275,17 +275,20 @@ class PortofolioDataStore {
       iconColor: const Color(0xFF254BD1),
     ));
 
-    // Sinkronkan ke Supabase
-    PortofolioService.tambahPortofolio(
-      judul: item.judul,
-      kategori: item.kategori,
-      deskripsi: item.deskripsi,
-      link: item.link,
-      tingkat: item.tingkat,
-      peran: item.peran,
-      skills: item.skills,
-      tanggal: item.tanggalUnggah,
-    );
+    // Sinkronkan ke Supabase hanya jika diminta
+    if (syncToSupabase) {
+      PortofolioService.tambahPortofolio(
+        judul: item.judul,
+        kategori: item.kategori,
+        deskripsi: item.deskripsi,
+        link: item.link,
+        fileUrl: item.imageUrl,
+        tingkat: item.tingkat,
+        peran: item.peran,
+        skills: item.skills,
+        tanggal: item.tanggalUnggah,
+      );
+    }
   }
 
   void updateStatus(String id, String newStatus, {String? catatan}) {

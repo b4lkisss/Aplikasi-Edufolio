@@ -151,25 +151,40 @@ class _ProfilAdminState extends State<ProfilAdmin> {
 
     PortofolioDataStore().adminProfile.value = updated;
 
-    // Perbarui foto_profil & data di tabel admin Supabase
+    // Perbarui data di tabel admin Supabase
     try {
       final supabase = StorageService.supabase;
       final email = emailController.text.trim();
       final currentId = AuthService.currentUser?['id_admin'];
 
-      final updatePayload = <String, dynamic>{
+      final basePayload = <String, dynamic>{
         'nama_admin': updated.nama,
-        if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
+        'email': updated.email,
+        'jenis_kelamin': updated.jenisKelamin,
       };
 
-      if (currentId != null) {
-        await supabase.from('admin').update(updatePayload).eq('id_admin', currentId);
-      } else if (email.isNotEmpty) {
-        await supabase.from('admin').update(updatePayload).eq('email', email);
+      Future<void> runUpdate(Map<String, dynamic> payload) async {
+        if (currentId != null) {
+          await supabase.from('admin').update(payload).eq('id_admin', currentId);
+        } else if (email.isNotEmpty) {
+          await supabase.from('admin').update(payload).eq('email', email);
+        }
+      }
+
+      if (avatarUrl.startsWith('http')) {
+        try {
+          await runUpdate({...basePayload, 'foto_profil': avatarUrl});
+        } catch (_) {
+          await runUpdate(basePayload);
+        }
+      } else {
+        await runUpdate(basePayload);
       }
 
       if (AuthService.currentUser != null) {
         AuthService.currentUser!['nama_admin'] = updated.nama;
+        AuthService.currentUser!['email'] = updated.email;
+        AuthService.currentUser!['jenis_kelamin'] = updated.jenisKelamin;
         if (avatarUrl.startsWith('http')) {
           AuthService.currentUser!['foto_profil'] = avatarUrl;
         }

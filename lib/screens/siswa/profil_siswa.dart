@@ -104,12 +104,16 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
     String avatarUrl = dataStore.profile.value.avatarUrl;
     final currentId = AuthService.currentUser?['id_siswa']?.toString() ??
         dataStore.profile.value.nisn;
+    final currentNisn = nisnController.text.trim().isNotEmpty
+        ? nisnController.text.trim()
+        : dataStore.profile.value.nisn;
 
     if (selectedImageBytes != null) {
       final uploadedUrl = await StorageService.uploadFotoProfil(
         selectedImageBytes!,
         role: 'siswa',
         userId: currentId,
+        identifier: currentNisn,
       );
       if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
         avatarUrl = uploadedUrl;
@@ -138,32 +142,54 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
 
     dataStore.profile.value = updated;
 
-    // Perbarui foto_profil & data di database Supabase jika ada siswa aktif
+    // Perbarui data di database Supabase jika ada siswa aktif
     try {
       final supabase = StorageService.supabase;
       final email = emailController.text.trim();
       final nisn = nisnController.text.trim();
       final currentId = AuthService.currentUser?['id_siswa'];
 
-      final updatePayload = <String, dynamic>{
+      final basePayload = <String, dynamic>{
         'nama_siswa': updated.nama,
+        'nisn': updated.nisn,
+        'email': updated.email,
         'kelas': updated.kelas,
         'jurusan': updated.jurusan,
         'no_telepon': updated.noTelpon,
-        if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
+        'jenis_kelamin': updated.jenisKelamin,
       };
 
-      if (currentId != null) {
-        await supabase.from('siswa').update(updatePayload).eq('id_siswa', currentId);
-      } else if (email.isNotEmpty || nisn.isNotEmpty) {
-        await supabase.from('siswa').update(updatePayload).or('email.eq.$email,nisn.eq.$nisn');
+      // Coba update dengan foto_profil terlebih dahulu; jika kolom foto_profil belum ada di tabel siswa,
+      // otomatis fallback update data siswa tanpa foto_profil agar update profil tidak gagal (PGRST204).
+      Future<void> runUpdate(Map<String, dynamic> payload) async {
+        if (currentId != null) {
+          await supabase.from('siswa').update(payload).eq('id_siswa', currentId);
+        } else if (email.isNotEmpty || nisn.isNotEmpty) {
+          await supabase
+              .from('siswa')
+              .update(payload)
+              .or('email.eq.$email,nisn.eq.$nisn');
+        }
+      }
+
+      if (avatarUrl.startsWith('http')) {
+        try {
+          await runUpdate({...basePayload, 'foto_profil': avatarUrl});
+        } catch (_) {
+          await runUpdate(basePayload);
+        }
+      } else {
+        await runUpdate(basePayload);
       }
 
       if (AuthService.currentUser != null) {
         AuthService.currentUser!['nama_siswa'] = updated.nama;
+        AuthService.currentUser!['nisn'] = updated.nisn;
+        AuthService.currentUser!['email'] = updated.email;
         AuthService.currentUser!['kelas'] = updated.kelas;
         AuthService.currentUser!['jurusan'] = updated.jurusan;
         AuthService.currentUser!['no_telepon'] = updated.noTelpon;
+        AuthService.currentUser!['jenis_kelamin'] = updated.jenisKelamin;
         if (avatarUrl.startsWith('http')) {
           AuthService.currentUser!['foto_profil'] = avatarUrl;
         }

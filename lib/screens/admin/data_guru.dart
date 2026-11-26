@@ -1769,11 +1769,18 @@ class _DataGuruState extends State<DataGuru> {
               CircleAvatar(
                 radius: 25,
                 backgroundColor: fieldColor,
-                child: Icon(
-                  Icons.person,
-                  color: primaryColor,
-                  size: 30,
-                ),
+                backgroundImage: (guru['avatarUrl'] != null &&
+                        guru['avatarUrl'].toString().startsWith('http'))
+                    ? NetworkImage(guru['avatarUrl'].toString())
+                    : null,
+                child: (guru['avatarUrl'] == null ||
+                        !guru['avatarUrl'].toString().startsWith('http'))
+                    ? Icon(
+                        Icons.person,
+                        color: primaryColor,
+                        size: 30,
+                      )
+                    : null,
               ),
 
               const SizedBox(width: 10),

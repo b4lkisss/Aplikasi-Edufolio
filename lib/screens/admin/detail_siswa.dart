@@ -113,14 +113,32 @@ class DetailSiswa extends StatelessWidget {
                               color: const Color(0xFFCBD5E1),
                               width: 2,
                             ),
+                            image: (siswa['avatarUrl'] != null &&
+                                    siswa['avatarUrl']
+                                        .toString()
+                                        .startsWith('http'))
+                                ? DecorationImage(
+                                    image: NetworkImage(
+                                      siswa['avatarUrl'].toString(),
+                                    ),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
                           ),
-                          child: ClipOval(
-                            child: Icon(
-                              siswa['avatar'] == 0 ? Icons.person : Icons.face,
-                              size: 52,
-                              color: primaryColor,
-                            ),
-                          ),
+                          child: (siswa['avatarUrl'] == null ||
+                                  !siswa['avatarUrl']
+                                      .toString()
+                                      .startsWith('http'))
+                              ? ClipOval(
+                                  child: Icon(
+                                    siswa['avatar'] == 0
+                                        ? Icons.person
+                                        : Icons.face,
+                                    size: 52,
+                                    color: primaryColor,
+                                  ),
+                                )
+                              : null,
                         ),
 
                         const SizedBox(width: 14),

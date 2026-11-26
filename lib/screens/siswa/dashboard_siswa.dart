@@ -717,10 +717,10 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                           image: DecorationImage(
-                            image: profile.avatarBytes != null
-                                ? MemoryImage(profile.avatarBytes!)
-                                    as ImageProvider
-                                : NetworkImage(profile.avatarUrl),
+                            image: PortofolioItem.getAvatarImageProvider(
+                              profile.avatarBytes,
+                              profile.avatarUrl,
+                            ),
                             fit: BoxFit.cover,
                           ),
                         ),

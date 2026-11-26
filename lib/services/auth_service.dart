@@ -155,8 +155,14 @@ class AuthService {
 
         // Jika foto_profil tidak tersimpan di database, cek apakah pengguna memiliki foto di Supabase Storage
         if (avatarUrl == null || avatarUrl.isEmpty || !avatarUrl.startsWith('http')) {
-          final userId = (response['id_siswa'] ?? response['nisn'])?.toString() ?? '';
-          final storageAvatar = await StorageService.getFotoProfilUser('siswa', userId);
+          final userId = response['id_siswa']?.toString() ?? '';
+          final nisnId = response['nisn']?.toString() ?? '';
+          final storageAvatar = await StorageService.getFotoProfilUser(
+            'siswa',
+            userId.isNotEmpty ? userId : nisnId,
+            secondaryId: nisnId,
+            allowRoleFallback: true,
+          );
           if (storageAvatar != null && storageAvatar.isNotEmpty) {
             avatarUrl = storageAvatar;
             currentUser!['foto_profil'] = storageAvatar;
@@ -257,8 +263,14 @@ class AuthService {
 
         // Jika foto_profil tidak tersimpan di database, cek apakah guru memiliki foto di Supabase Storage
         if (guruAvatarUrl == null || guruAvatarUrl.isEmpty || !guruAvatarUrl.startsWith('http')) {
-          final userId = (response['id_guru'] ?? response['nip'])?.toString() ?? '';
-          final storageAvatar = await StorageService.getFotoProfilUser('guru', userId);
+          final userId = response['id_guru']?.toString() ?? '';
+          final nipId = response['nip']?.toString() ?? '';
+          final storageAvatar = await StorageService.getFotoProfilUser(
+            'guru',
+            userId.isNotEmpty ? userId : nipId,
+            secondaryId: nipId,
+            allowRoleFallback: true,
+          );
           if (storageAvatar != null && storageAvatar.isNotEmpty) {
             guruAvatarUrl = storageAvatar;
             currentUser!['foto_profil'] = storageAvatar;
@@ -340,7 +352,11 @@ class AuthService {
         // Jika foto_profil tidak tersimpan di database, cek apakah admin memiliki foto di Supabase Storage
         if (adminAvatarUrl == null || adminAvatarUrl.isEmpty || !adminAvatarUrl.startsWith('http')) {
           final userId = response['id_admin']?.toString() ?? '1';
-          final storageAvatar = await StorageService.getFotoProfilUser('admin', userId);
+          final storageAvatar = await StorageService.getFotoProfilUser(
+            'admin',
+            userId,
+            allowRoleFallback: true,
+          );
           if (storageAvatar != null && storageAvatar.isNotEmpty) {
             adminAvatarUrl = storageAvatar;
             currentUser!['foto_profil'] = storageAvatar;
@@ -416,5 +432,9 @@ class AuthService {
   static void logout() {
     currentUser = null;
     currentRole = null;
+    final store = PortofolioDataStore();
+    store.profile.value = SiswaProfile();
+    store.guruProfile.value = GuruProfile();
+    store.adminProfile.value = AdminProfile();
   }
 }

@@ -916,13 +916,18 @@ class _DataSiswaState extends State<DataSiswa> {
               CircleAvatar(
                 radius: 25,
                 backgroundColor: fieldColor,
-                child: Icon(
-                  siswa['avatar'] == 0
-                      ? Icons.person
-                      : Icons.face,
-                  color: primaryColor,
-                  size: 30,
-                ),
+                backgroundImage: (siswa['avatarUrl'] != null &&
+                        siswa['avatarUrl'].toString().startsWith('http'))
+                    ? NetworkImage(siswa['avatarUrl'].toString())
+                    : null,
+                child: (siswa['avatarUrl'] == null ||
+                        !siswa['avatarUrl'].toString().startsWith('http'))
+                    ? Icon(
+                        siswa['avatar'] == 0 ? Icons.person : Icons.face,
+                        color: primaryColor,
+                        size: 30,
+                      )
+                    : null,
               ),
 
               const SizedBox(width: 10),

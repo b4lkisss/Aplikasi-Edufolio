@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/siswa/portofolio_data.dart';
 import 'auth_service.dart';
+import 'storage_service.dart';
 
 class PortofolioService {
   static SupabaseClient get supabase => Supabase.instance.client;
@@ -59,6 +60,7 @@ class PortofolioService {
     required String kategori,
     required String deskripsi,
     required String link,
+    String? fileUrl,
     String? tingkat,
     String? peran,
     List<String>? skills,
@@ -68,8 +70,14 @@ class PortofolioService {
       final idSiswa = await getActiveSiswaId();
       final idKategori = await getOrCreateKategoriId(kategori);
 
-      final tglFormatted = tanggal ??
+      String tglFormatted = tanggal ??
           DateTime.now().toIso8601String().substring(0, 10);
+      if (tglFormatted.contains('/')) {
+        final parts = tglFormatted.split('/');
+        if (parts.length == 3) {
+          tglFormatted = '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}';
+        }
+      }
 
       // A. Insert ke tabel portofolio_siswa
       final portoResponse = await supabase.from('portofolio_siswa').insert({
@@ -79,7 +87,7 @@ class PortofolioService {
         'deskripsi': deskripsi,
         'tanggal_portofolio': tglFormatted,
         'link_pendukung': link,
-        'file_pendukung': link,
+        'file_pendukung': fileUrl ?? link,
       }).select().single();
 
       final idPortofolio = portoResponse['id_portofolio'];
@@ -111,12 +119,13 @@ class PortofolioService {
         tanggal_portofolio,
         link_pendukung,
         file_pendukung,
-        siswa:id_siswa (id_siswa, nama_siswa, kelas),
+        siswa:id_siswa (id_siswa, nama_siswa, kelas, nisn),
         kategori:id_kategori (id_kategori, nama_kategori),
         verifikasi (id_verifikasi, status_verifikasi, catatan),
         penilaian (id_penilaian, nilai, catatan)
       ''').order('id_portofolio', ascending: false);
 
+      final avatarMap = await StorageService.getAllAvatarUrlsMap();
       final List<PortofolioItem> items = [];
 
       for (var row in (res as List)) {
@@ -136,13 +145,20 @@ class PortofolioService {
         String namaSiswa = 'Siswa Edufolio';
         String kelas = 'XII RPL B';
         String? idSiswaStr;
+        String? nisnStr;
         if (row['siswa'] != null) {
           namaSiswa = row['siswa']['nama_siswa'] ?? namaSiswa;
           kelas = row['siswa']['kelas'] ?? kelas;
           idSiswaStr = row['siswa']['id_siswa']?.toString();
+          nisnStr = row['siswa']['nisn']?.toString();
         } else if (row['id_siswa'] != null) {
           idSiswaStr = row['id_siswa'].toString();
         }
+
+        final String siswaAvatar =
+            (idSiswaStr != null ? avatarMap['siswa_$idSiswaStr'] : null) ??
+            (nisnStr != null ? avatarMap['siswa_$nisnStr'] : null) ??
+            PortofolioItem.defaultAvatar;
 
         // Status Verifikasi
         String status = 'Menunggu';
@@ -164,10 +180,11 @@ class PortofolioService {
           catatanNilai = pen['catatan'];
         }
 
-        String img = (link.isNotEmpty && (link.startsWith('http://') || link.startsWith('https://')))
-            ? link
-            : (row['file_pendukung'] != null && row['file_pendukung'].toString().startsWith('http')
-                ? row['file_pendukung'].toString()
+        final filePendukung = row['file_pendukung']?.toString() ?? '';
+        String img = (filePendukung.isNotEmpty && filePendukung.startsWith('http'))
+            ? filePendukung
+            : (link.isNotEmpty && (link.startsWith('http://') || link.startsWith('https://'))
+                ? link
                 : 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80');
 
         items.add(PortofolioItem(
@@ -182,6 +199,7 @@ class PortofolioService {
           status: status,
           namaSiswa: namaSiswa,
           kelas: kelas,
+          avatarUrl: siswaAvatar,
           catatan: catatanNilai ?? catatanVerifikasi,
           kreativitas: nilai != null ? (nilai / 20).round().clamp(1, 5) : null,
           kualitas: nilai != null ? (nilai / 20).round().clamp(1, 5) : null,

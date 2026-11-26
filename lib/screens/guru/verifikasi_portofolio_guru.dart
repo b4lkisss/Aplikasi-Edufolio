@@ -370,7 +370,7 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
                 // FOTO SISWA
                 CircleAvatar(
                   radius: 24,
-                  backgroundImage: NetworkImage(item.avatarUrl),
+                  backgroundImage: PortofolioItem.getAvatarImageProvider(null, item.avatarUrl),
                   backgroundColor: const Color(0xFFCBD5E1),
                 ),
                 const SizedBox(width: 12),

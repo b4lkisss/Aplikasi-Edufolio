@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'storage_service.dart';
 
 class MasterDataService {
   static SupabaseClient get supabase => Supabase.instance.client;
@@ -15,8 +16,16 @@ class MasterDataService {
           .select()
           .order('id_guru', ascending: false);
 
+      final avatarMap = await StorageService.getAllAvatarUrlsMap();
       final List<Map<String, dynamic>> list = [];
       for (var item in (res as List)) {
+        final idStr = item['id_guru']?.toString() ?? '';
+        final nipStr = item['nip']?.toString() ?? '';
+        final dbAvatar = item['foto_profil'] ?? item['avatar_url'];
+        final resolvedAvatar = (dbAvatar != null && dbAvatar.toString().startsWith('http'))
+            ? dbAvatar.toString()
+            : (avatarMap['guru_$idStr'] ?? avatarMap['guru_$nipStr']);
+
         list.add({
           'id': item['id_guru'],
           'nama': item['nama_guru'] ?? '',
@@ -25,7 +34,7 @@ class MasterDataService {
           'nip': item['nip'] ?? '',
           'password': item['password'] ?? '',
           'jenis_kelamin': item['jenis_kelamin'] ?? 'Laki-laki',
-          'avatarUrl': item['foto_profil'] ?? item['avatar_url'],
+          'avatarUrl': resolvedAvatar,
         });
       }
       return list;
@@ -80,16 +89,23 @@ class MasterDataService {
     String? avatarUrl,
   }) async {
     try {
-      final data = {
+      final baseData = {
         'nama_guru': nama,
         'nip': nip,
         'email': email,
         'bidang_mengajar': bidang,
         if (password != null && password.isNotEmpty) 'password': password,
-        if (avatarUrl != null) 'foto_profil': avatarUrl,
       };
 
-      await supabase.from('guru').update(data).eq('id_guru', id);
+      if (avatarUrl != null) {
+        try {
+          await supabase.from('guru').update({...baseData, 'foto_profil': avatarUrl}).eq('id_guru', id);
+        } catch (_) {
+          await supabase.from('guru').update(baseData).eq('id_guru', id);
+        }
+      } else {
+        await supabase.from('guru').update(baseData).eq('id_guru', id);
+      }
       return true;
     } catch (e) {
       return false;
@@ -118,8 +134,16 @@ class MasterDataService {
           .select()
           .order('id_siswa', ascending: false);
 
+      final avatarMap = await StorageService.getAllAvatarUrlsMap();
       final List<Map<String, dynamic>> list = [];
       for (var item in (res as List)) {
+        final idStr = item['id_siswa']?.toString() ?? '';
+        final nisnStr = item['nisn']?.toString() ?? '';
+        final dbAvatar = item['foto_profil'] ?? item['avatar_url'];
+        final resolvedAvatar = (dbAvatar != null && dbAvatar.toString().startsWith('http'))
+            ? dbAvatar.toString()
+            : (avatarMap['siswa_$idStr'] ?? avatarMap['siswa_$nisnStr']);
+
         list.add({
           'id': item['id_siswa'],
           'nama': item['nama_siswa'] ?? '',
@@ -132,7 +156,7 @@ class MasterDataService {
           'jenis_kelamin': item['jenis_kelamin'] ?? 'Laki-laki',
           'password': item['password'] ?? '',
           'username': item['username'] ?? '',
-          'avatarUrl': item['foto_profil'] ?? item['avatar_url'],
+          'avatarUrl': resolvedAvatar,
         });
       }
       return list;
@@ -212,7 +236,7 @@ class MasterDataService {
     String? avatarUrl,
   }) async {
     try {
-      final data = {
+      final baseData = {
         'nama_siswa': nama,
         'nisn': nisn,
         'email': email,
@@ -220,10 +244,17 @@ class MasterDataService {
         'jurusan': jurusan,
         if (angkatan != null) 'tahun_ajaran': angkatan,
         if (password != null && password.isNotEmpty) 'password': password,
-        if (avatarUrl != null) 'foto_profil': avatarUrl,
       };
 
-      await supabase.from('siswa').update(data).eq('id_siswa', id);
+      if (avatarUrl != null) {
+        try {
+          await supabase.from('siswa').update({...baseData, 'foto_profil': avatarUrl}).eq('id_siswa', id);
+        } catch (_) {
+          await supabase.from('siswa').update(baseData).eq('id_siswa', id);
+        }
+      } else {
+        await supabase.from('siswa').update(baseData).eq('id_siswa', id);
+      }
       return true;
     } catch (e) {
       return false;

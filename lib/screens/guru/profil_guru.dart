@@ -104,12 +104,16 @@ class _ProfilGuruState extends State<ProfilGuru> {
     String avatarUrl = PortofolioDataStore().guruProfile.value.avatarUrl;
     final currentId = AuthService.currentUser?['id_guru']?.toString() ??
         PortofolioDataStore().guruProfile.value.nip;
+    final currentNip = nipController.text.trim().isNotEmpty
+        ? nipController.text.trim()
+        : PortofolioDataStore().guruProfile.value.nip;
 
     if (selectedImageBytes != null) {
       final uploadedUrl = await StorageService.uploadFotoProfil(
         selectedImageBytes!,
         role: 'guru',
         userId: currentId,
+        identifier: currentNip,
       );
       if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
         avatarUrl = uploadedUrl;
@@ -142,28 +146,48 @@ class _ProfilGuruState extends State<ProfilGuru> {
 
     PortofolioDataStore().guruProfile.value = updated;
 
-    // Perbarui foto_profil & data di tabel guru Supabase
+    // Perbarui data di tabel guru Supabase
     try {
       final supabase = StorageService.supabase;
       final email = emailController.text.trim();
       final nip = nipController.text.trim();
       final currentId = AuthService.currentUser?['id_guru'];
 
-      final updatePayload = <String, dynamic>{
+      final basePayload = <String, dynamic>{
         'nama_guru': updated.nama,
+        'nip': updated.nip,
+        'email': updated.email,
         'bidang_mengajar': updated.bidang,
-        if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
+        'jenis_kelamin': updated.jenisKelamin,
       };
 
-      if (currentId != null) {
-        await supabase.from('guru').update(updatePayload).eq('id_guru', currentId);
-      } else if (email.isNotEmpty || nip.isNotEmpty) {
-        await supabase.from('guru').update(updatePayload).or('email.eq.$email,nip.eq.$nip');
+      Future<void> runUpdate(Map<String, dynamic> payload) async {
+        if (currentId != null) {
+          await supabase.from('guru').update(payload).eq('id_guru', currentId);
+        } else if (email.isNotEmpty || nip.isNotEmpty) {
+          await supabase
+              .from('guru')
+              .update(payload)
+              .or('email.eq.$email,nip.eq.$nip');
+        }
+      }
+
+      if (avatarUrl.startsWith('http')) {
+        try {
+          await runUpdate({...basePayload, 'foto_profil': avatarUrl});
+        } catch (_) {
+          await runUpdate(basePayload);
+        }
+      } else {
+        await runUpdate(basePayload);
       }
 
       if (AuthService.currentUser != null) {
         AuthService.currentUser!['nama_guru'] = updated.nama;
+        AuthService.currentUser!['nip'] = updated.nip;
+        AuthService.currentUser!['email'] = updated.email;
         AuthService.currentUser!['bidang_mengajar'] = updated.bidang;
+        AuthService.currentUser!['jenis_kelamin'] = updated.jenisKelamin;
         if (avatarUrl.startsWith('http')) {
           AuthService.currentUser!['foto_profil'] = avatarUrl;
         }

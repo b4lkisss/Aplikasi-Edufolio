@@ -276,10 +276,18 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
   }
 
   Widget _buildSiswaCard(Map<String, dynamic> siswa) {
-    final bool isFemale = (siswa['avatar'] ?? 0) == 0;
-    final String avatarUrl = isFemale
-        ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
-        : 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80';
+    final String? savedAvatar = siswa['avatarUrl']?.toString();
+    final bool hasCustomAvatar =
+        savedAvatar != null && savedAvatar.startsWith('http');
+    final bool isFemale =
+        (siswa['jenis_kelamin']?.toString().toLowerCase() ?? '') ==
+                'perempuan' ||
+            (siswa['avatar'] ?? 0) == 0;
+    final String avatarUrl = hasCustomAvatar
+        ? savedAvatar
+        : (isFemale
+            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+            : 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

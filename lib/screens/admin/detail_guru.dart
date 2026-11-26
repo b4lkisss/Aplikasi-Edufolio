@@ -87,14 +87,26 @@ class DetailGuru extends StatelessWidget {
                           color: const Color(0xFFCBD5E1),
                           width: 2,
                         ),
+                        image: (guru['avatarUrl'] != null &&
+                                guru['avatarUrl'].toString().startsWith('http'))
+                            ? DecorationImage(
+                                image: NetworkImage(
+                                  guru['avatarUrl'].toString(),
+                                ),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
-                      child: ClipOval(
-                        child: Icon(
-                          Icons.person,
-                          size: 55,
-                          color: primaryColor,
-                        ),
-                      ),
+                      child: (guru['avatarUrl'] == null ||
+                              !guru['avatarUrl'].toString().startsWith('http'))
+                          ? ClipOval(
+                              child: Icon(
+                                Icons.person,
+                                size: 55,
+                                color: primaryColor,
+                              ),
+                            )
+                          : null,
                     ),
 
                     const SizedBox(height: 10),

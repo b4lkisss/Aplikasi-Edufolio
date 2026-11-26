@@ -153,7 +153,10 @@ class _DetailPortofolioGuruState extends State<DetailPortofolioGuru> {
                             children: [
                               CircleAvatar(
                                 radius: 32,
-                                backgroundImage: NetworkImage(avatar),
+                                backgroundImage: PortofolioItem.getAvatarImageProvider(
+                                  null,
+                                  avatar?.toString(),
+                                ),
                                 backgroundColor: const Color(0xFFCBD5E1),
                               ),
                               const SizedBox(width: 14),
@@ -379,6 +382,17 @@ class _DetailPortofolioGuruState extends State<DetailPortofolioGuru> {
     final String namaSiswa =
         widget.portofolio['nama_siswa'] ?? 'Balqis Demes Piscesa';
     final String kelasSiswa = widget.portofolio['kelas'] ?? 'XII RPL B';
+    final String? fotoKarya = (widget.portofolio['imageUrl'] ??
+            widget.portofolio['thumbnail'] ??
+            widget.portofolio['file_pendukung'])
+        ?.toString();
+    final String previewImageUrl =
+        (fotoKarya != null && fotoKarya.startsWith('http'))
+            ? fotoKarya
+            : (link.startsWith('http://') || link.startsWith('https://'))
+                ? link
+                : 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80';
+    final String? siswaAvatarUrl = widget.portofolio['avatar']?.toString();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -415,13 +429,20 @@ class _DetailPortofolioGuruState extends State<DetailPortofolioGuru> {
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: const Color(0xFFCBD5E1),
-                    child: Text(
-                      namaSiswa.isNotEmpty ? namaSiswa[0] : 'S',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
+                    backgroundImage: (siswaAvatarUrl != null &&
+                            siswaAvatarUrl.startsWith('http'))
+                        ? NetworkImage(siswaAvatarUrl)
+                        : null,
+                    child: (siswaAvatarUrl == null ||
+                            !siswaAvatarUrl.startsWith('http'))
+                        ? Text(
+                            namaSiswa.isNotEmpty ? namaSiswa[0] : 'S',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -477,7 +498,7 @@ class _DetailPortofolioGuruState extends State<DetailPortofolioGuru> {
 
             const SizedBox(height: 16),
 
-            // GAMBAR / PREVIEW SERTIFIKAT
+            // GAMBAR / PREVIEW SERTIFIKAT ASLI DARI SUPABASE
             Container(
               width: double.infinity,
               height: 200,
@@ -485,10 +506,8 @@ class _DetailPortofolioGuruState extends State<DetailPortofolioGuru> {
                 color: const Color(0xFFE2E8F0),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFFCBD5E1)),
-                image: const DecorationImage(
-                  image: NetworkImage(
-                    'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80',
-                  ),
+                image: DecorationImage(
+                  image: NetworkImage(previewImageUrl),
                   fit: BoxFit.cover,
                 ),
               ),

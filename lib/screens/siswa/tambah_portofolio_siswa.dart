@@ -206,8 +206,8 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
       tanggalUnggah: formattedDate,
     );
 
-    // Simpan ke local store agar langsung muncul di UI
-    dataStore.addPortofolio(newItem);
+    // Simpan ke local store agar langsung muncul di UI (tanpa duplikasi insert Supabase)
+    dataStore.addPortofolio(newItem, syncToSupabase: false);
 
     // Kirim ke tabel database Supabase (portofolio_siswa & verifikasi)
     try {
@@ -217,7 +217,10 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
         deskripsi: deskripsiController.text.trim().isNotEmpty
             ? deskripsiController.text.trim()
             : 'Portofolio karya mandiri siswa dalam bidang ${selectedKategori!}.',
-        link: finalImageUrl,
+        link: linkController.text.trim().isNotEmpty
+            ? linkController.text.trim()
+            : finalImageUrl,
+        fileUrl: finalImageUrl,
         tingkat: selectedTingkat,
         peran: selectedPeran,
         skills: skillsList,
