@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 import '../../services/image_picker_service.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/pilih_foto_dialog.dart';
@@ -101,11 +102,14 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
 
   Future<void> _simpanProfil() async {
     String avatarUrl = dataStore.profile.value.avatarUrl;
+    final currentId = AuthService.currentUser?['id_siswa']?.toString() ??
+        dataStore.profile.value.nisn;
 
     if (selectedImageBytes != null) {
       final uploadedUrl = await StorageService.uploadFotoProfil(
         selectedImageBytes!,
         role: 'siswa',
+        userId: currentId,
       );
       if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
         avatarUrl = uploadedUrl;
@@ -139,14 +143,30 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
       final supabase = StorageService.supabase;
       final email = emailController.text.trim();
       final nisn = nisnController.text.trim();
-      if (email.isNotEmpty || nisn.isNotEmpty) {
-        await supabase.from('siswa').update({
-          'nama_siswa': updated.nama,
-          'kelas': updated.kelas,
-          'jurusan': updated.jurusan,
-          'no_telepon': updated.noTelpon,
-          if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
-        }).or('email.eq.$email,nisn.eq.$nisn');
+      final currentId = AuthService.currentUser?['id_siswa'];
+
+      final updatePayload = <String, dynamic>{
+        'nama_siswa': updated.nama,
+        'kelas': updated.kelas,
+        'jurusan': updated.jurusan,
+        'no_telepon': updated.noTelpon,
+        if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
+      };
+
+      if (currentId != null) {
+        await supabase.from('siswa').update(updatePayload).eq('id_siswa', currentId);
+      } else if (email.isNotEmpty || nisn.isNotEmpty) {
+        await supabase.from('siswa').update(updatePayload).or('email.eq.$email,nisn.eq.$nisn');
+      }
+
+      if (AuthService.currentUser != null) {
+        AuthService.currentUser!['nama_siswa'] = updated.nama;
+        AuthService.currentUser!['kelas'] = updated.kelas;
+        AuthService.currentUser!['jurusan'] = updated.jurusan;
+        AuthService.currentUser!['no_telepon'] = updated.noTelpon;
+        if (avatarUrl.startsWith('http')) {
+          AuthService.currentUser!['foto_profil'] = avatarUrl;
+        }
       }
     } catch (_) {}
 
@@ -256,17 +276,13 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
                         color: const Color(0xFFE2E8F0),
                         width: 3,
                       ),
-                      image: selectedImageBytes != null
-                          ? DecorationImage(
-                              image: MemoryImage(selectedImageBytes!),
-                              fit: BoxFit.cover,
-                            )
-                          : const DecorationImage(
-                              image: NetworkImage(
-                                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-                              ),
-                              fit: BoxFit.cover,
-                            ),
+                      image: DecorationImage(
+                        image: PortofolioItem.getAvatarImageProvider(
+                          selectedImageBytes,
+                          dataStore.profile.value.avatarUrl,
+                        ),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -293,7 +309,40 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+
+            // BADGE INSTANSI TETAP: SMKN 8 MALANG
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFBFDBFE), width: 1.2),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.school_rounded,
+                      size: 16,
+                      color: Color(0xFF254BD1),
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Instansi: SMKN 8 Malang',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E40AF),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 18),
 
             // 1. NAMA LENGKAP
             _buildFieldLabel('Nama Lengkap'),

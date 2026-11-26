@@ -129,12 +129,19 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
               ),
             ],
           ),
-          body: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Column(
+          body: RefreshIndicator(
+            color: primaryBlue,
+            backgroundColor: Colors.white,
+            onRefresh: () async {
+              await dataStore.fetchFromSupabase();
+            },
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Column(
                     children: [
                       // TABS STATUS DENGAN JUMLAH DINAMIS & TEPAT
                       Row(
@@ -281,7 +288,8 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
               ),
             ],
           ),
-        );
+        ),
+      );
       },
     );
   }

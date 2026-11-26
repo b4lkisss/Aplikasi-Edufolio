@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 import 'portofolio_data.dart';
 import 'detail_portofolio_siswa.dart';
 import '../notifikasi_screen.dart';
@@ -120,8 +121,16 @@ class _StatusVerifikasiSiswaState extends State<StatusVerifikasiSiswa> {
       body: ValueListenableBuilder<List<PortofolioItem>>(
         valueListenable: dataStore.portofolioList,
         builder: (context, allItems, _) {
+          final activeSiswaId = (AuthService.currentUser != null && AuthService.currentRole == 'Siswa')
+              ? AuthService.currentUser!['id_siswa']?.toString()
+              : null;
+
+          final siswaItems = activeSiswaId != null
+              ? allItems.where((i) => i.idSiswa == null || i.idSiswa == activeSiswaId).toList()
+              : allItems;
+
           // FILTER ITEMS SESUAI TAB
-          final filtered = allItems.where((item) {
+          final filtered = siswaItems.where((item) {
             if (selectedStatus == 'Semua') return true;
             if (selectedStatus == 'Menunggu') {
               return item.status.toLowerCase().contains('menunggu');

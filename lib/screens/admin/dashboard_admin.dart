@@ -427,17 +427,10 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                               child: CircleAvatar(
                                 radius: 24,
                                 backgroundColor: Colors.white,
-                                backgroundImage: admin.avatarBytes != null
-                                    ? MemoryImage(admin.avatarBytes!)
-                                        as ImageProvider
-                                    : null,
-                                child: admin.avatarBytes == null
-                                    ? const Icon(
-                                        Icons.person,
-                                        size: 30,
-                                        color: primaryBlue,
-                                      )
-                                    : null,
+                                backgroundImage: PortofolioItem.getAvatarImageProvider(
+                                  admin.avatarBytes,
+                                  admin.avatarUrl,
+                                ),
                               ),
                             ),
 

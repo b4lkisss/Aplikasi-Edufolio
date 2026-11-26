@@ -22,8 +22,8 @@ class _DataGuruState extends State<DataGuru> {
   int currentPage = 1;
   final int itemsPerPage = 9;
 
-  // DATA GURU DARI SUPABASE
   List<Map<String, dynamic>> daftarGuru = [];
+  bool isLoading = true;
 
   final List<String> daftarBidang = [
     'Bahasa Inggris',
@@ -37,8 +37,6 @@ class _DataGuruState extends State<DataGuru> {
     'Basis Data',
   ];
 
-  bool isLoading = true;
-
   @override
   void initState() {
     super.initState();
@@ -46,6 +44,7 @@ class _DataGuruState extends State<DataGuru> {
   }
 
   Future<void> _fetchGuruFromSupabase() async {
+    setState(() => isLoading = true);
     final data = await MasterDataService.getDaftarGuru();
     if (mounted) {
       setState(() {

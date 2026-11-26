@@ -57,6 +57,11 @@ class _LoginAdminState extends State<LoginAdmin> {
       final dataStore = PortofolioDataStore();
       if (role == 'Siswa') {
         if (user != null) {
+          final loadedAvatar = dataStore.profile.value.avatarUrl;
+          final rawFoto = (user['foto_profil'] ?? user['avatar_url'])?.toString().trim();
+          final effectiveAvatar = (loadedAvatar.isNotEmpty && loadedAvatar.startsWith('http'))
+              ? loadedAvatar
+              : ((rawFoto != null && rawFoto.isNotEmpty) ? rawFoto : PortofolioDataStore.defaultAvatar);
           dataStore.profile.value = SiswaProfile(
             nama: user['nama_siswa'] ?? 'Siswa',
             nisn: user['nisn'] ?? '',
@@ -65,22 +70,38 @@ class _LoginAdminState extends State<LoginAdmin> {
             email: user['email'] ?? '',
             noTelpon: user['no_telepon'] ?? '',
             jenisKelamin: user['jenis_kelamin'] ?? 'Laki-laki',
+            avatarUrl: effectiveAvatar,
+            avatarBytes: null,
           );
         }
       } else if (role == 'Guru') {
         if (user != null) {
+          final loadedAvatar = dataStore.guruProfile.value.avatarUrl;
+          final rawFoto = (user['foto_profil'] ?? user['avatar_url'])?.toString().trim();
+          final effectiveAvatar = (loadedAvatar.isNotEmpty && loadedAvatar.startsWith('http'))
+              ? loadedAvatar
+              : ((rawFoto != null && rawFoto.isNotEmpty) ? rawFoto : PortofolioDataStore.defaultAvatar);
           dataStore.guruProfile.value = GuruProfile(
-            nama: user['nama_guru'] ?? 'Ahmad Dahlan, S.Pd',
+            nama: user['nama_guru'] ?? 'Guru',
             nip: user['nip'] ?? '',
             email: user['email'] ?? '',
-            bidang: user['bidang_mengajar'] ?? 'RPL',
+            bidang: user['bidang_mengajar'] ?? 'Guru Pengajar',
+            avatarUrl: effectiveAvatar,
+            avatarBytes: null,
           );
         }
       } else if (role == 'Admin') {
         if (user != null) {
+          final loadedAvatar = dataStore.adminProfile.value.avatarUrl;
+          final rawFoto = (user['foto_profil'] ?? user['avatar_url'])?.toString().trim();
+          final effectiveAvatar = (loadedAvatar.isNotEmpty && loadedAvatar.startsWith('http'))
+              ? loadedAvatar
+              : ((rawFoto != null && rawFoto.isNotEmpty) ? rawFoto : PortofolioDataStore.defaultAvatar);
           dataStore.adminProfile.value = AdminProfile(
             nama: user['nama_admin'] ?? 'Administrator',
             email: user['email'] ?? 'admin@edufolio.com',
+            avatarUrl: effectiveAvatar,
+            avatarBytes: null,
           );
         }
       }

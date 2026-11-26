@@ -223,6 +223,8 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
         skills: skillsList,
         tanggal: selectedDate!.toIso8601String().substring(0, 10),
       );
+      // Re-fetch dari Supabase agar id asli dan id_siswa sinkron
+      await dataStore.fetchFromSupabase();
     } catch (_) {}
 
     if (!mounted) return;

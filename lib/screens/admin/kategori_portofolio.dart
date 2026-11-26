@@ -19,39 +19,6 @@ class _KategoriPortofolioState extends State<KategoriPortofolio> {
 
   List<Map<String, dynamic>> daftarKategori = [];
 
-  final List<Map<String, dynamic>> defaultKategori = [
-    {
-      'id': 1,
-      'nama': 'Prestasi & Lomba',
-      'jumlah': '0 data',
-      'icon': Icons.emoji_events_outlined,
-    },
-    {
-      'id': 2,
-      'nama': 'Sertifikat',
-      'jumlah': '0 data',
-      'icon': Icons.card_membership_outlined,
-    },
-    {
-      'id': 3,
-      'nama': 'Projek',
-      'jumlah': '0 data',
-      'icon': Icons.military_tech_outlined,
-    },
-    {
-      'id': 4,
-      'nama': 'Organisasi',
-      'jumlah': '0 data',
-      'icon': Icons.account_tree_outlined,
-    },
-    {
-      'id': 5,
-      'nama': 'Ekstrakurikuler',
-      'jumlah': '0 data',
-      'icon': Icons.menu_book_outlined,
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -64,18 +31,14 @@ class _KategoriPortofolioState extends State<KategoriPortofolio> {
     if (!mounted) return;
     setState(() {
       isLoading = false;
-      if (data.isNotEmpty) {
-        daftarKategori = data.map((item) {
-          return {
-            'id': item['id'],
-            'nama': item['nama'],
-            'jumlah': item['jumlah'] ?? '0 data',
-            'icon': _getIconForKategori(item['nama'] ?? ''),
-          };
-        }).toList();
-      } else {
-        daftarKategori = List.from(defaultKategori);
-      }
+      daftarKategori = data.map((item) {
+        return {
+          'id': item['id'],
+          'nama': item['nama'],
+          'jumlah': item['jumlah'] ?? '0 data',
+          'icon': _getIconForKategori(item['nama'] ?? ''),
+        };
+      }).toList();
     });
   }
 

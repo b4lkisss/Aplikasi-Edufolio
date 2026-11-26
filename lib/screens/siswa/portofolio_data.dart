@@ -3,6 +3,18 @@ import 'package:flutter/material.dart';
 import '../../services/portofolio_service.dart';
 
 class PortofolioItem {
+  static const String defaultAvatar = 'assets/images/default_avatar.png';
+
+  static ImageProvider getAvatarImageProvider(Uint8List? bytes, String? url) {
+    if (bytes != null && bytes.isNotEmpty) {
+      return MemoryImage(bytes);
+    }
+    if (url != null && url.trim().isNotEmpty && url.startsWith('http')) {
+      return NetworkImage(url.trim());
+    }
+    return const AssetImage(defaultAvatar);
+  }
+
   final String id;
   final String judul;
   final String kategori; // Prestasi & Lomba, Sertifikat, Projek, Organisasi
@@ -25,6 +37,8 @@ class PortofolioItem {
   int? relevansi;
   int? dokumentasi;
 
+  final String? idSiswa;
+
   PortofolioItem({
     required this.id,
     required this.judul,
@@ -39,15 +53,15 @@ class PortofolioItem {
     this.imageUrl,
     this.imageBytes,
     this.tanggalUnggah = '12 Apr 2025',
-    this.namaSiswa = 'Balqis Demes Piscesa',
+    this.namaSiswa = 'Siswa',
     this.kelas = 'XII RPL B',
-    this.avatarUrl =
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    this.avatarUrl = defaultAvatar,
     this.catatan,
     this.kreativitas,
     this.kualitas,
     this.relevansi,
     this.dokumentasi,
+    this.idSiswa,
   });
 
   Map<String, dynamic> toMap() {
@@ -74,6 +88,7 @@ class PortofolioItem {
       'kualitas': kualitas,
       'relevansi': relevansi,
       'dokumentasi': dokumentasi,
+      'id_siswa': idSiswa,
       'nilai': (kreativitas != null &&
               kualitas != null &&
               relevansi != null &&
@@ -96,14 +111,14 @@ class SiswaProfile {
   Uint8List? avatarBytes;
 
   SiswaProfile({
-    this.nama = '',
-    this.nisn = '',
-    this.kelas = '',
-    this.jurusan = '',
+    this.nama = 'Siswa',
+    this.nisn = '-',
+    this.kelas = 'XII RPL B',
+    this.jurusan = 'RPL',
     this.email = '',
-    this.noTelpon = '',
-    this.jenisKelamin = '',
-    this.avatarUrl = '',
+    this.noTelpon = '-',
+    this.jenisKelamin = 'Laki-laki',
+    this.avatarUrl = 'assets/images/default_avatar.png',
     this.avatarBytes,
   });
 }
@@ -120,14 +135,14 @@ class GuruProfile {
   Uint8List? avatarBytes;
 
   GuruProfile({
-    this.nama = '',
-    this.nip = '',
-    this.bidang = '',
+    this.nama = 'Guru',
+    this.nip = '-',
+    this.bidang = 'Guru Pengajar',
     this.email = '',
-    this.tglLahir = '',
-    this.noTelpon = '',
-    this.jenisKelamin = '',
-    this.avatarUrl = '',
+    this.tglLahir = '-',
+    this.noTelpon = '-',
+    this.jenisKelamin = 'Laki-laki',
+    this.avatarUrl = 'assets/images/default_avatar.png',
     this.avatarBytes,
   });
 }
@@ -142,12 +157,12 @@ class AdminProfile {
   Uint8List? avatarBytes;
 
   AdminProfile({
-    this.nama = '',
-    this.email = '',
-    this.noTelpon = '',
-    this.jenisKelamin = '',
-    this.tglLahir = '',
-    this.avatarUrl = '',
+    this.nama = 'Administrator',
+    this.email = 'admin@edufolio.com',
+    this.noTelpon = '-',
+    this.jenisKelamin = 'Laki-laki',
+    this.tglLahir = '-',
+    this.avatarUrl = 'assets/images/default_avatar.png',
     this.avatarBytes,
   });
 }
@@ -177,6 +192,7 @@ class AppNotification {
 }
 
 class PortofolioDataStore {
+  static const String defaultAvatar = PortofolioItem.defaultAvatar;
   static final PortofolioDataStore _instance = PortofolioDataStore._internal();
   factory PortofolioDataStore() => _instance;
   PortofolioDataStore._internal();
@@ -195,7 +211,44 @@ class PortofolioDataStore {
 
   // NOTIFIKASI TERSINKRONISASI
   final ValueNotifier<List<AppNotification>> notifications =
-      ValueNotifier<List<AppNotification>>([]);
+      ValueNotifier<List<AppNotification>>([
+    AppNotification(
+      id: '1',
+      title: 'Pengajuan Baru Masuk',
+      message: 'Balqis Demes Piscesa mengajukan "Project Aplikasi E-Commerce Mobile".',
+      time: '2 Jam yang lalu',
+      role: 'guru',
+      icon: Icons.upload_file_rounded,
+      iconColor: const Color(0xFF254BD1),
+    ),
+    AppNotification(
+      id: '2',
+      title: 'Portofolio Disetujui',
+      message: 'Selamat! Portofolio "Juara 1 Lomba Web Design Provinsi" telah disetujui Guru.',
+      time: '1 Hari yang lalu',
+      role: 'siswa',
+      icon: Icons.check_circle_rounded,
+      iconColor: const Color(0xFF16A34A),
+    ),
+    AppNotification(
+      id: '3',
+      title: 'Perlu Revisi',
+      message: 'Portofolio "Proposal UI/UX Aplikasi Edukasi" ditolak. Catatan: Perlu perbaikan dokumentasi.',
+      time: '2 Hari yang lalu',
+      role: 'siswa',
+      icon: Icons.cancel_rounded,
+      iconColor: const Color(0xFFDC2626),
+    ),
+    AppNotification(
+      id: '4',
+      title: 'Pendaftaran Akun Baru',
+      message: 'Siswa baru Karissa Zuleika (XII RPL B) telah berhasil terdaftar ke sistem Edufolio.',
+      time: '3 Jam yang lalu',
+      role: 'admin',
+      icon: Icons.person_add_rounded,
+      iconColor: const Color(0xFF254BD1),
+    ),
+  ]);
 
   // CRUD METODE PORTOFOLIO DENGAN SINKRONISASI SUPABASE
   Future<void> fetchFromSupabase() async {

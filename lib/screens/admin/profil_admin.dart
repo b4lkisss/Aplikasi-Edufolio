@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 import '../../services/image_picker_service.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/pilih_foto_dialog.dart';
@@ -117,11 +118,13 @@ class _ProfilAdminState extends State<ProfilAdmin> {
   // FUNGSI SIMPAN PROFIL
   Future<void> _simpanProfil() async {
     String avatarUrl = PortofolioDataStore().adminProfile.value.avatarUrl;
+    final currentId = AuthService.currentUser?['id_admin']?.toString() ?? '1';
 
     if (fotoBytes != null) {
       final uploadedUrl = await StorageService.uploadFotoProfil(
         fotoBytes!,
         role: 'admin',
+        userId: currentId,
       );
       if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
         avatarUrl = uploadedUrl;
@@ -152,11 +155,24 @@ class _ProfilAdminState extends State<ProfilAdmin> {
     try {
       final supabase = StorageService.supabase;
       final email = emailController.text.trim();
-      if (email.isNotEmpty) {
-        await supabase.from('admin').update({
-          'nama_admin': updated.nama,
-          if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
-        }).eq('email', email);
+      final currentId = AuthService.currentUser?['id_admin'];
+
+      final updatePayload = <String, dynamic>{
+        'nama_admin': updated.nama,
+        if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
+      };
+
+      if (currentId != null) {
+        await supabase.from('admin').update(updatePayload).eq('id_admin', currentId);
+      } else if (email.isNotEmpty) {
+        await supabase.from('admin').update(updatePayload).eq('email', email);
+      }
+
+      if (AuthService.currentUser != null) {
+        AuthService.currentUser!['nama_admin'] = updated.nama;
+        if (avatarUrl.startsWith('http')) {
+          AuthService.currentUser!['foto_profil'] = avatarUrl;
+        }
       }
     } catch (_) {}
 
@@ -290,18 +306,15 @@ class _ProfilAdminState extends State<ProfilAdmin> {
                                 ],
                               ),
                               child: ClipOval(
-                                child: fotoBytes != null
-                                    ? Image.memory(
-                                        fotoBytes!,
-                                        width: 120,
-                                        height: 120,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : const Icon(
-                                        Icons.person,
-                                        size: 75,
-                                        color: Colors.white,
-                                      ),
+                                child: Image(
+                                  image: PortofolioItem.getAvatarImageProvider(
+                                    fotoBytes,
+                                    PortofolioDataStore().adminProfile.value.avatarUrl,
+                                  ),
+                                  width: 120,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
                           ),
@@ -342,7 +355,40 @@ class _ProfilAdminState extends State<ProfilAdmin> {
                       ),
                     ),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 12),
+
+                    // BADGE INSTANSI TETAP: SMKN 8 MALANG
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFBFDBFE), width: 1.2),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.school_rounded,
+                              size: 16,
+                              color: Color(0xFF254BD1),
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Instansi: SMKN 8 Malang',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E40AF),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
 
                     // 1. NAMA LENGKAP
                     _buildFieldGroup('Nama Lengkap', namaController),

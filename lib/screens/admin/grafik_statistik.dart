@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../services/master_data_service.dart';
+import '../siswa/portofolio_data.dart';
 
 class GrafikStatistik extends StatefulWidget {
   const GrafikStatistik({super.key});
@@ -145,13 +147,138 @@ class _GrafikStatistikState extends State<GrafikStatistik> {
     {'name': 'Penghargaan', 'count': 1, 'color': const Color(0xFF14B8A6)}, // Teal
   ];
 
-  _PeriodData get currentPeriodData {
-    return periodDataMap[selectedPeriod] ?? periodDataMap['This Month']!;
+  final PortofolioDataStore dataStore = PortofolioDataStore();
+
+  @override
+  void initState() {
+    super.initState();
+    dataStore.fetchFromSupabase();
+  }
+
+  // Menghitung dataset grafik garis dari data Supabase secara real-time
+  _PeriodData _computePeriodData(List<PortofolioItem> allPortofolio, String period) {
+    final filtered = allPortofolio.where((i) {
+      final dt = MasterDataService.parseTanggalString(i.tanggalUnggah) ??
+          MasterDataService.parseTanggalString(i.tanggal);
+      return MasterDataService.matchFilterPeriode(dt, period);
+    }).toList();
+
+    final total = filtered.length;
+
+    List<String> labels = [];
+    List<double> values = [];
+
+    if (period == 'Today' || period == 'Yesterday') {
+      labels = ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+      values = List.filled(labels.length, 0.0);
+      if (total > 0) {
+        values[2] = total.toDouble(); // Tempatkan pada jam tengah
+      }
+    } else if (period == 'This Week' || period == 'Last Week') {
+      labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+      values = List.filled(labels.length, 0.0);
+      for (var item in filtered) {
+        final dt = MasterDataService.parseTanggalString(item.tanggalUnggah) ??
+            MasterDataService.parseTanggalString(item.tanggal);
+        if (dt != null) {
+          final idx = (dt.weekday - 1).clamp(0, 6);
+          values[idx] += 1.0;
+        }
+      }
+    } else {
+      // Month / Year / All -> 12 Bulan
+      labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+      values = List.filled(labels.length, 0.0);
+      for (var item in filtered) {
+        final dt = MasterDataService.parseTanggalString(item.tanggalUnggah) ??
+            MasterDataService.parseTanggalString(item.tanggal);
+        if (dt != null) {
+          final idx = (dt.month - 1).clamp(0, 11);
+          values[idx] += 1.0;
+        }
+      }
+    }
+
+    final maxVal = values.isNotEmpty ? values.reduce(math.max) : 0.0;
+    final maxY = maxVal > 0 ? (maxVal <= 4 ? 4.0 : (maxVal * 1.25).ceilToDouble()) : 4.0;
+    final yLabels = [maxY, (maxY * 0.75).roundToDouble(), (maxY * 0.5).roundToDouble(), (maxY * 0.25).roundToDouble(), 0.0];
+
+    return _PeriodData(
+      labels: labels,
+      values: values,
+      maxY: maxY,
+      yLabels: yLabels,
+      total: total,
+      subtitle: total == 0 ? 'Belum ada pengajuan portofolio pada periode ini' : '$total Pengajuan portofolio tercatat',
+    );
+  }
+
+  // Menghitung donat kategori dari data Supabase secara real-time
+  List<Map<String, dynamic>> _computeCategoryData(List<PortofolioItem> allPortofolio, String period) {
+    final filtered = allPortofolio.where((i) {
+      final dt = MasterDataService.parseTanggalString(i.tanggalUnggah) ??
+          MasterDataService.parseTanggalString(i.tanggal);
+      return MasterDataService.matchFilterPeriode(dt, period);
+    }).toList();
+
+    final Map<String, int> counts = {};
+    for (var item in filtered) {
+      final kat = item.kategori.trim().isEmpty ? 'Lainnya' : item.kategori.trim();
+      counts[kat] = (counts[kat] ?? 0) + 1;
+    }
+
+    final colors = [
+      const Color(0xFF254BD1),
+      const Color(0xFF0284C7),
+      const Color(0xFF38BDF8),
+      const Color(0xFF0D9488),
+      const Color(0xFF10B981),
+      const Color(0xFF6366F1),
+      const Color(0xFF8B5CF6),
+      const Color(0xFFEC4899),
+    ];
+
+    if (counts.isEmpty) {
+      return [
+        {'name': 'Belum Ada Data', 'count': 0, 'color': const Color(0xFFCBD5E1)},
+      ];
+    }
+
+    int colorIdx = 0;
+    return counts.entries.map((entry) {
+      final color = colors[colorIdx % colors.length];
+      colorIdx++;
+      return {
+        'name': entry.key,
+        'count': entry.value,
+        'color': color,
+      };
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final activeData = currentPeriodData;
+    return ValueListenableBuilder<List<PortofolioItem>>(
+      valueListenable: dataStore.portofolioList,
+      builder: (context, allPortofolio, _) {
+        final activeData = _computePeriodData(allPortofolio, selectedPeriod);
+        final dynamicCategoryData = _computeCategoryData(allPortofolio, selectedPeriod);
+
+        // Hitung perbandingan per jurusan dari data portofolio
+        final totalPorto = activeData.total;
+        final rplCount = allPortofolio.where((p) => p.kelas.toLowerCase().contains('rpl')).length;
+        final tkjCount = allPortofolio.where((p) => p.kelas.toLowerCase().contains('tkj')).length;
+        final totalJurusan = (rplCount + tkjCount) > 0 ? (rplCount + tkjCount) : 1;
+
+        // Hitung top kelas teraktif
+        final Map<String, int> kelasMap = {};
+        for (var p in allPortofolio) {
+          if (p.kelas.isNotEmpty) {
+            kelasMap[p.kelas] = (kelasMap[p.kelas] ?? 0) + 1;
+          }
+        }
+        final sortedKelas = kelasMap.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -270,7 +397,7 @@ class _GrafikStatistikState extends State<GrafikStatistik> {
             // ==============================================================
             // 2. GRAFIK KATEGORI PORTOFOLIO (DONUT / CIRCULAR CHART BIRU)
             // ==============================================================
-            _buildKategoriPortofolioDonutCard(),
+            _buildKategoriPortofolioDonutCard(dynamicCategoryData),
 
             const SizedBox(height: 18),
 
@@ -307,8 +434,8 @@ class _GrafikStatistikState extends State<GrafikStatistik> {
                   _buildJurusanProgressBar(
                     jurusan: 'Rekayasa Perangkat Lunak (RPL)',
                     icon: Icons.code_rounded,
-                    count: '98 Portofolio',
-                    percent: 0.65,
+                    count: '$rplCount Portofolio',
+                    percent: (rplCount / totalJurusan).clamp(0.0, 1.0),
                     color: primaryBlue,
                     bgColor: const Color(0x1F254BD1),
                   ),
@@ -319,8 +446,8 @@ class _GrafikStatistikState extends State<GrafikStatistik> {
                   _buildJurusanProgressBar(
                     jurusan: 'Teknik Komputer & Jaringan (TKJ)',
                     icon: Icons.router_rounded,
-                    count: '52 Portofolio',
-                    percent: 0.35,
+                    count: '$tkjCount Portofolio',
+                    percent: (tkjCount / totalJurusan).clamp(0.0, 1.0),
                     color: const Color(0xFF0D9488),
                     bgColor: const Color(0x1F0D9488),
                   ),
@@ -359,29 +486,30 @@ class _GrafikStatistikState extends State<GrafikStatistik> {
                   ),
                   const SizedBox(height: 12),
 
-                  _buildKelasLeaderboardItem(
-                    rank: '1',
-                    kelas: 'XII RPL B',
-                    total: '48 Portofolio',
-                    badgeColor: const Color(0xFFEFF6FF),
-                    textColor: primaryBlue,
-                  ),
-                  const SizedBox(height: 8),
-                  _buildKelasLeaderboardItem(
-                    rank: '2',
-                    kelas: 'XI RPL A',
-                    total: '32 Portofolio',
-                    badgeColor: const Color(0xFFF1F5F9),
-                    textColor: const Color(0xFF64748B),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildKelasLeaderboardItem(
-                    rank: '3',
-                    kelas: 'XII TKJ A',
-                    total: '28 Portofolio',
-                    badgeColor: const Color(0xFFF0FDF4),
-                    textColor: const Color(0xFF16A34A),
-                  ),
+                  if (sortedKelas.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        'Belum ada aktivitas portofolio dari kelas manapun.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                      ),
+                    )
+                  else
+                    ...List.generate(sortedKelas.take(3).length, (idx) {
+                      final item = sortedKelas[idx];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _buildKelasLeaderboardItem(
+                          rank: '${idx + 1}',
+                          kelas: item.key,
+                          total: '${item.value} Portofolio',
+                          badgeColor: idx == 0
+                              ? const Color(0xFFEFF6FF)
+                              : const Color(0xFFF1F5F9),
+                          textColor: idx == 0 ? primaryBlue : const Color(0xFF64748B),
+                        ),
+                      );
+                    }),
                 ],
               ),
             ),
@@ -391,6 +519,8 @@ class _GrafikStatistikState extends State<GrafikStatistik> {
         ),
       ),
     );
+  },
+);
   }
 
   // ==========================================================================
@@ -651,7 +781,7 @@ class _GrafikStatistikState extends State<GrafikStatistik> {
   // ==========================================================================
   // WIDGET KARTU KATEGORI PORTOFOLIO (DONUT / CIRCULAR CHART BIRU DENGAN HOVER TOOLTIP)
   // ==========================================================================
-  Widget _buildKategoriPortofolioDonutCard() {
+  Widget _buildKategoriPortofolioDonutCard(List<Map<String, dynamic>> categoryData) {
     final total = categoryData.fold<double>(
       0.0,
       (sum, item) => sum + (item['count'] as num).toDouble(),

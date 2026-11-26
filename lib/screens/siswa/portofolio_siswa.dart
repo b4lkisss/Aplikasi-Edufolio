@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 import 'portofolio_data.dart';
 import 'detail_portofolio_siswa.dart';
 import 'tambah_portofolio_siswa.dart';
@@ -144,12 +145,27 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
           );
         },
       ),
-      body: ValueListenableBuilder<List<PortofolioItem>>(
-        valueListenable: dataStore.portofolioList,
-        builder: (context, allItems, _) {
+      body: RefreshIndicator(
+        color: primaryBlue,
+        backgroundColor: Colors.white,
+        onRefresh: () async {
+          await dataStore.fetchFromSupabase();
+        },
+        child: ValueListenableBuilder<List<PortofolioItem>>(
+          valueListenable: dataStore.portofolioList,
+          builder: (context, allItems, _) {
+          // Hanya tampilkan portofolio milik siswa aktif jika login sebagai siswa
+          final activeSiswaId = (AuthService.currentUser != null && AuthService.currentRole == 'Siswa')
+              ? AuthService.currentUser!['id_siswa']?.toString()
+              : null;
+
+          final siswaItems = activeSiswaId != null
+              ? allItems.where((i) => i.idSiswa == null || i.idSiswa == activeSiswaId).toList()
+              : allItems;
+
           // FILTER BERDASARKAN KATEGORI & PENCARIAN
           final query = searchController.text.trim().toLowerCase();
-          List<PortofolioItem> filtered = allItems.where((item) {
+          List<PortofolioItem> filtered = siswaItems.where((item) {
             final matchesKategori = selectedKategori == 'Kategori' ||
                 selectedKategori == 'Semua Kategori' ||
                 selectedKategori == 'Semua' ||
@@ -343,7 +359,8 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
           );
         },
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildPortofolioCard(PortofolioItem item) {

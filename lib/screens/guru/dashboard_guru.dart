@@ -57,9 +57,19 @@ class _DashboardGuruState extends State<DashboardGuru> {
       backgroundColor: Colors.white,
       drawer: _buildGuruDrawer(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          child: Column(
+        child: RefreshIndicator(
+          color: primaryBlue,
+          backgroundColor: Colors.white,
+          onRefresh: () async {
+            await Future.wait([
+              dataStore.fetchFromSupabase(),
+              _fetchSiswaCount(),
+            ]);
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // HEADER: MENU DRAWER + TITLE + DROPDOWN PERIOD + NOTIFICATION
@@ -353,118 +363,147 @@ class _DashboardGuruState extends State<DashboardGuru> {
 
               const SizedBox(height: 22),
 
-              // SECTION PENGAJUAN VERIFIKASI
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // SECTION PENGAJUAN VERIFIKASI — CARD FLAT LIST STYLE
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Pengajuan Verifikasi',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const VerifikasiPortofolioGuru(),
-                        ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(6),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      child: Text(
-                        'Lihat Semua',
+                  // HEADER DI LUAR CARD
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Pengajuan Verifikasi',
                         style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: primaryBlue,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
                         ),
                       ),
-                    ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const VerifikasiPortofolioGuru(),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(6),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Text(
+                            'Lihat Semua',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: primaryBlue,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                  const SizedBox(height: 10),
 
-              const SizedBox(height: 12),
+                  // CARD BESAR BERISI BARIS-BARIS
+                  ValueListenableBuilder<List<PortofolioItem>>(
+                    valueListenable: dataStore.portofolioList,
+                    builder: (context, items, _) {
+                      final pendingFiltered = items.where((i) {
+                        if (i.status != 'Menunggu') return false;
+                        final dt = MasterDataService.parseTanggalString(i.tanggalUnggah) ??
+                            MasterDataService.parseTanggalString(i.tanggal);
+                        return MasterDataService.matchFilterPeriode(dt, selectedPeriod);
+                      }).toList();
 
-              // LIST PENGAJUAN (CARD DI DALAM CONTAINER BESAR DENGAN EMPTY STATE & ICON BESAR)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: ValueListenableBuilder<List<PortofolioItem>>(
-                  valueListenable: dataStore.portofolioList,
-                  builder: (context, items, _) {
-                    // Filter pengajuan sesuai periode waktu yang dipilih
-                    final pendingFiltered = items.where((i) {
-                      if (i.status != 'Menunggu') return false;
-                      final dt = MasterDataService.parseTanggalString(i.tanggalUnggah) ??
-                          MasterDataService.parseTanggalString(i.tanggal);
-                      return MasterDataService.matchFilterPeriode(dt, selectedPeriod);
-                    }).toList();
-
-                    if (pendingFiltered.isEmpty) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE2E8F0),
-                                shape: BoxShape.circle,
+                      if (pendingFiltered.isEmpty) {
+                        return Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
                               ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.inbox_rounded,
-                                  size: 46,
-                                  color: Color(0xFF94A3B8),
+                            ],
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFF1F5F9),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.inbox_rounded,
+                                      size: 36,
+                                      color: Color(0xFF94A3B8),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Belum ada pengajuan verifikasi',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'Tidak ada portofolio yang menunggu verifikasi.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 14),
-                            Text(
-                              'Belum ada pengajuan verifikasi (${selectedPeriod})',
-                              style: const TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E293B),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'Tidak ada siswa yang mengunggah portofolio pada periode waktu ini.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF64748B),
-                              ),
+                          ),
+                        );
+                      }
+
+                      // CARD BESAR SATU DENGAN BARIS-BARIS DI DALAMNYA
+                      return Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
                             ),
                           ],
                         ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Column(
+                            children: [
+                              for (int i = 0; i < pendingFiltered.take(6).length; i++) ...[
+                                _buildFlatRow(pendingFiltered[i]),
+                                if (i < pendingFiltered.take(6).length - 1)
+                                  const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                              ],
+                            ],
+                          ),
+                        ),
                       );
-                    }
-
-                    return Column(
-                      children: pendingFiltered
-                          .take(5)
-                          .map((item) => _buildPengajuanCard(item.toMap()))
-                          .toList(),
-                    );
-                  },
-                ),
+                    },
+                  ),
+                ],
               ),
 
               const SizedBox(height: 20),
@@ -472,7 +511,8 @@ class _DashboardGuruState extends State<DashboardGuru> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   // WIDGET KARTU STATISTIK (MODEL SAMA PERSIS SEPERTI DI ADMIN)
@@ -541,112 +581,110 @@ class _DashboardGuruState extends State<DashboardGuru> {
     );
   }
 
-  // WIDGET KARTU PENGAJUAN MENUNGGU (CARD BERSIH PUTIH DENGAN BORDER & SHADOW)
-  Widget _buildPengajuanCard(Map<String, dynamic> item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  // BARIS FLAT DI DALAM CARD BESAR (GAYA FLAT LIST)
+  Widget _buildFlatRow(PortofolioItem item) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailPortofolioGuru(portofolio: item.toMap()),
           ),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DetailPortofolioGuru(portofolio: item),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // AVATAR SISWA
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundImage: PortofolioItem.getAvatarImageProvider(null, item.avatarUrl),
             ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // FOTO SISWA
-              CircleAvatar(
-                radius: 22,
-                backgroundImage: NetworkImage(item['avatar'] ?? ''),
-              ),
-              const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-              // NAMA SISWA, KELAS, JUDUL & WAKTU
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: item['nama_siswa'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
-                            ),
+            // KONTEN KIRI
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.namaSiswa,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0F172A),
                           ),
-                          TextSpan(
-                            text: '  (${item['kelas'] ?? ''})',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF64748B),
-                            ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          item.kelas,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1E40AF),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item['judul'] ?? '',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item['waktu'] ?? '',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // BADGE "MENUNGGU" (WARNA OREN SESUAI PERMINTAAN USER)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFEDD5),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFFED7AA)),
-                ),
-                child: const Text(
-                  'Menunggu',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFEA580C),
+                    ],
                   ),
+                  const SizedBox(height: 3),
+                  Text(
+                    item.judul,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    item.tanggalUnggah,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 10),
+
+            // BADGE MENUNGGU
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFEDCAC)),
+              ),
+              child: const Text(
+                'Menunggu',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFEA580C),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -676,10 +714,10 @@ class _DashboardGuruState extends State<DashboardGuru> {
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                           image: DecorationImage(
-                            image: guru.avatarBytes != null
-                                ? MemoryImage(guru.avatarBytes!)
-                                    as ImageProvider
-                                : NetworkImage(guru.avatarUrl),
+                            image: PortofolioItem.getAvatarImageProvider(
+                              guru.avatarBytes,
+                              guru.avatarUrl,
+                            ),
                             fit: BoxFit.cover,
                           ),
                         ),

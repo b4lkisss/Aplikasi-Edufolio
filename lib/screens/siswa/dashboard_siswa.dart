@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/master_data_service.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/logout_dialog.dart';
 import 'portofolio_data.dart';
 import 'profil_siswa.dart';
@@ -36,9 +37,16 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
       backgroundColor: Colors.white,
       drawer: _buildSiswaDrawer(context),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          child: Column(
+        child: RefreshIndicator(
+          color: primaryBlue,
+          backgroundColor: Colors.white,
+          onRefresh: () async {
+            await dataStore.fetchFromSupabase();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // HEADER: DASHBOARD + FILTER PERIODE + NOTIFIKASI
@@ -208,10 +216,10 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                                 width: 2,
                               ),
                               image: DecorationImage(
-                                image: profile.avatarBytes != null
-                                    ? MemoryImage(profile.avatarBytes!)
-                                        as ImageProvider
-                                    : NetworkImage(profile.avatarUrl),
+                                image: PortofolioItem.getAvatarImageProvider(
+                                  profile.avatarBytes,
+                                  profile.avatarUrl,
+                                ),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -315,8 +323,17 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
               ValueListenableBuilder<List<PortofolioItem>>(
                 valueListenable: dataStore.portofolioList,
                 builder: (context, items, _) {
+                  // Saring portofolio agar siswa hanya melihat karyanya sendiri jika id_siswa cocok
+                  final activeSiswaId = (AuthService.currentUser != null && AuthService.currentRole == 'Siswa')
+                      ? AuthService.currentUser!['id_siswa']?.toString()
+                      : null;
+
+                  final siswaItems = activeSiswaId != null
+                      ? items.where((i) => i.idSiswa == null || i.idSiswa == activeSiswaId).toList()
+                      : items;
+
                   // Filter berdasarkan periode waktu terpilih
-                  final filteredItems = items.where((i) {
+                  final filteredItems = siswaItems.where((i) {
                     final dt = MasterDataService.parseTanggalString(i.tanggalUnggah) ??
                         MasterDataService.parseTanggalString(i.tanggal);
                     return MasterDataService.matchFilterPeriode(dt, selectedPeriod);
@@ -380,169 +397,183 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
 
               const SizedBox(height: 20),
 
-              // STATUS VERIFIKASI TERBARU
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // SECTION STATUS VERIFIKASI TERBARU — CARD FLAT LIST STYLE
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Status Verifikasi Terbaru',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const StatusVerifikasiSiswa(),
+                  // HEADER DI LUAR CARD
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Status Verifikasi Terbaru',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
                         ),
-                      );
-                    },
-                    child: const Row(
-                      children: [
-                        Text(
-                          'Lihat Semua',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: primaryBlue,
-                          ),
-                        ),
-                        SizedBox(width: 2),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          size: 16,
-                          color: primaryBlue,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 10),
-
-              // CARD STATUS VERIFIKASI TERBARU (SINKRON REAL-TIME DARI DATA STORE)
-              ValueListenableBuilder<List<PortofolioItem>>(
-                valueListenable: dataStore.portofolioList,
-                builder: (context, items, _) {
-                  if (items.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-
-                  final item = items.first;
-                  final isMenunggu = item.status == 'Menunggu';
-                  final isDitolak = item.status == 'Ditolak';
-
-                  Color iconBg = isMenunggu
-                      ? const Color(0xFFFFEDD5)
-                      : (isDitolak
-                          ? const Color(0xFFFEE2E2)
-                          : const Color(0xFFDCFCE7));
-                  Color iconColor = isMenunggu
-                      ? const Color(0xFFEA580C)
-                      : (isDitolak
-                          ? const Color(0xFFDC2626)
-                          : const Color(0xFF16A34A));
-                  IconData icon = isMenunggu
-                      ? Icons.access_time_filled_rounded
-                      : (isDitolak
-                          ? Icons.cancel_rounded
-                          : Icons.check_circle_rounded);
-
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              DetailPortofolioSiswa(portofolio: item),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: const Color(0xFFE2E8F0),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: iconBg,
-                              borderRadius: BorderRadius.circular(12),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const StatusVerifikasiSiswa(),
                             ),
-                            child: Icon(
-                              icon,
-                              color: iconColor,
-                              size: 24,
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(6),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Text(
+                            'Lihat Semua',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: primaryBlue,
                             ),
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // CARD BESAR BERISI BARIS-BARIS
+                  ValueListenableBuilder<List<PortofolioItem>>(
+                    valueListenable: dataStore.portofolioList,
+                    builder: (context, items, _) {
+                      final activeSiswaId = (AuthService.currentUser != null && AuthService.currentRole == 'Siswa')
+                          ? AuthService.currentUser!['id_siswa']?.toString()
+                          : null;
+
+                      final siswaItems = activeSiswaId != null
+                          ? items.where((i) => i.idSiswa == null || i.idSiswa == activeSiswaId).toList()
+                          : items;
+
+                      if (siswaItems.isEmpty) {
+                        return Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
+                          child: const Center(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
+                                Icon(
+                                  Icons.hourglass_empty_rounded,
+                                  size: 40,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                SizedBox(height: 10),
                                 Text(
-                                  item.judul,
-                                  style: const TextStyle(
+                                  'Belum Ada Pengajuan Portofolio',
+                                  style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
+                                    color: Color(0xFF1E293B),
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 3),
+                                SizedBox(height: 4),
                                 Text(
-                                  isMenunggu
-                                      ? 'Menunggu Verifikasi Guru'
-                                      : (isDitolak
-                                          ? 'Ditolak: ${item.catatan ?? "Perlu revisi"}'
-                                          : 'Disetujui'),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: iconColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  'Diunggah: ${item.tanggalUnggah}',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF64748B),
-                                  ),
+                                  'Tekan tombol "Upload Karya Baru" untuk mulai mengajukan portofolio.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                        );
+                      }
+
+                      // CARD BESAR SATU DENGAN BARIS-BARIS
+                      return Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: siswaItems.take(5).length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                            itemBuilder: (context, i) {
+                              final item = siswaItems[i];
+                              final isMenunggu = item.status == 'Menunggu';
+                              final isDitolak = item.status == 'Ditolak';
+                              final badgeBg = isMenunggu ? const Color(0xFFFFF7ED) : (isDitolak ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4));
+                              final badgeBorder = isMenunggu ? const Color(0xFFFFEDD5) : (isDitolak ? const Color(0xFFFECACA) : const Color(0xFFDCFCE7));
+                              final badgeText = isMenunggu ? const Color(0xFFEA580C) : (isDitolak ? const Color(0xFFDC2626) : const Color(0xFF16A34A));
+
+                              return InkWell(
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPortofolioSiswa(portofolio: item))),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 36, height: 36,
+                                        decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(10)),
+                                        child: const Icon(Icons.description_outlined, size: 20, color: primaryBlue),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(item.judul, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                            const SizedBox(height: 3),
+                                            Text(item.kategori, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(item.tanggalUnggah, style: const TextStyle(fontSize: 10.5, color: Color(0xFF94A3B8))),
+                                          const SizedBox(height: 4),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                            decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(6), border: Border.all(color: badgeBorder)),
+                                            child: Text(item.status, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: badgeText)),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
 
               const SizedBox(height: 22),
@@ -585,7 +616,8 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   void _openPortofolioTab(String kategori) {

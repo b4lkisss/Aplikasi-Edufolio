@@ -22,104 +22,22 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
   int currentPage = 1;
   final int itemsPerPage = 8;
 
-  static final List<Map<String, dynamic>> defaultDaftarSiswa = [
-    {
-      'nama': 'Balqis Demes Piscesa',
-      'nisn': '1234567890',
-      'kelas': 'XII RPL B',
-      'jurusan': 'RPL',
-      'angkatan': '2024',
-      'avatar': 0,
-    },
-    {
-      'nama': 'Andi Ardiansyah',
-      'nisn': '1234567891',
-      'kelas': 'XII RPL B',
-      'jurusan': 'RPL',
-      'angkatan': '2024',
-      'avatar': 1,
-    },
-    {
-      'nama': 'Siti Aulia',
-      'nisn': '1234567892',
-      'kelas': 'XI RPL A',
-      'jurusan': 'RPL',
-      'angkatan': '2025',
-      'avatar': 0,
-    },
-    {
-      'nama': 'Muhammad Rizky',
-      'nisn': '1234567893',
-      'kelas': 'XI TKJ A',
-      'jurusan': 'TKJ',
-      'angkatan': '2025',
-      'avatar': 1,
-    },
-    {
-      'nama': 'Nadia Putri',
-      'nisn': '1234567894',
-      'kelas': 'XII RPL B',
-      'jurusan': 'RPL',
-      'angkatan': '2024',
-      'avatar': 0,
-    },
-    {
-      'nama': 'Dimas Pratama',
-      'nisn': '1234567895',
-      'kelas': 'X TKJ B',
-      'jurusan': 'TKJ',
-      'angkatan': '2026',
-      'avatar': 1,
-    },
-    {
-      'nama': 'Ayu Lestari',
-      'nisn': '1234567896',
-      'kelas': 'XI RPL A',
-      'jurusan': 'RPL',
-      'angkatan': '2025',
-      'avatar': 0,
-    },
-    {
-      'nama': 'Fajar Ramadhan',
-      'nisn': '1234567897',
-      'kelas': 'XII TKJ A',
-      'jurusan': 'TKJ',
-      'angkatan': '2024',
-      'avatar': 1,
-    },
-  ];
-
-  late List<Map<String, dynamic>> daftarSiswa;
+  List<Map<String, dynamic>> daftarSiswa = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    daftarSiswa = List.from(defaultDaftarSiswa);
     _fetchSiswaFromSupabase();
   }
 
   Future<void> _fetchSiswaFromSupabase() async {
+    setState(() => isLoading = true);
     final data = await MasterDataService.getDaftarSiswa();
-    if (data.isNotEmpty && mounted) {
+    if (mounted) {
       setState(() {
-        final existingNisns = data
-            .map((e) => e['nisn']?.toString().trim())
-            .where((s) => s != null && s.isNotEmpty)
-            .toSet();
-        final existingNames = data
-            .map((e) => e['nama']?.toString().trim().toLowerCase())
-            .where((s) => s != null && s.isNotEmpty)
-            .toSet();
-
-        final pelengkap = defaultDaftarSiswa.where((item) {
-          final nisn = item['nisn']?.toString().trim();
-          final nama = item['nama']?.toString().trim().toLowerCase();
-          final isNisnDuplicate = nisn != null && existingNisns.contains(nisn);
-          final isNamaDuplicate = nama != null && existingNames.contains(nama);
-          return !isNisnDuplicate && !isNamaDuplicate;
-        }).toList();
-
-        daftarSiswa = [...data, ...pelengkap];
+        isLoading = false;
+        daftarSiswa = data;
       });
     }
   }

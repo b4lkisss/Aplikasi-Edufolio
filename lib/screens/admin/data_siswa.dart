@@ -24,9 +24,7 @@ class _DataSiswaState extends State<DataSiswa> {
   int currentPage = 1;
   final int itemsPerPage = 9;
 
-  // DATA SISWA DARI SUPABASE
   List<Map<String, dynamic>> daftarSiswa = [];
-
   bool isLoading = true;
 
   @override
@@ -36,6 +34,7 @@ class _DataSiswaState extends State<DataSiswa> {
   }
 
   Future<void> _fetchSiswaFromSupabase() async {
+    setState(() => isLoading = true);
     final data = await MasterDataService.getDaftarSiswa();
     if (mounted) {
       setState(() {

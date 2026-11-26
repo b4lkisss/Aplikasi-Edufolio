@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class LogoutDialog extends StatelessWidget {
   final String role; // 'admin', 'guru', 'siswa'
@@ -123,6 +124,7 @@ class LogoutDialog extends StatelessWidget {
                     height: 44,
                     child: ElevatedButton(
                       onPressed: () {
+                        AuthService.logout();
                         Navigator.of(context).pop();
                         if (onLogout != null) {
                           onLogout!();

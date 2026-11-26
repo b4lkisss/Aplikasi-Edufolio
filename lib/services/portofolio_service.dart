@@ -135,9 +135,13 @@ class PortofolioService {
         // Siswa
         String namaSiswa = 'Siswa Edufolio';
         String kelas = 'XII RPL B';
+        String? idSiswaStr;
         if (row['siswa'] != null) {
           namaSiswa = row['siswa']['nama_siswa'] ?? namaSiswa;
           kelas = row['siswa']['kelas'] ?? kelas;
+          idSiswaStr = row['siswa']['id_siswa']?.toString();
+        } else if (row['id_siswa'] != null) {
+          idSiswaStr = row['id_siswa'].toString();
         }
 
         // Status Verifikasi
@@ -185,6 +189,7 @@ class PortofolioService {
           dokumentasi: nilai != null ? (nilai / 20).round().clamp(1, 5) : null,
           imageUrl: img,
           tanggalUnggah: tgl,
+          idSiswa: idSiswaStr,
         ));
       }
 
