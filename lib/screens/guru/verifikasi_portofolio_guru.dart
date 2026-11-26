@@ -451,14 +451,19 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
                     width: 72,
                     height: 54,
                     color: const Color(0xFFF1F5F9),
-                    child: item.imageUrl != null
-                        ? Image.network(
-                            item.imageUrl!,
+                    child: item.imageBytes != null
+                        ? Image.memory(
+                            item.imageBytes!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                const Icon(Icons.image, color: Colors.grey),
                           )
-                        : const Icon(Icons.image, color: Colors.grey),
+                        : (item.imageUrl != null
+                            ? Image.network(
+                                item.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.image, color: Colors.grey),
+                              )
+                            : const Icon(Icons.image, color: Colors.grey)),
                   ),
                 ),
               ],

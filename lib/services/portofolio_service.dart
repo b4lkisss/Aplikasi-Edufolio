@@ -160,6 +160,12 @@ class PortofolioService {
           catatanNilai = pen['catatan'];
         }
 
+        String img = (link.isNotEmpty && (link.startsWith('http://') || link.startsWith('https://')))
+            ? link
+            : (row['file_pendukung'] != null && row['file_pendukung'].toString().startsWith('http')
+                ? row['file_pendukung'].toString()
+                : 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80');
+
         items.add(PortofolioItem(
           id: id,
           judul: judul,
@@ -177,8 +183,7 @@ class PortofolioService {
           kualitas: nilai != null ? (nilai / 20).round().clamp(1, 5) : null,
           relevansi: nilai != null ? (nilai / 20).round().clamp(1, 5) : null,
           dokumentasi: nilai != null ? (nilai / 20).round().clamp(1, 5) : null,
-          imageUrl:
-              'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+          imageUrl: img,
           tanggalUnggah: tgl,
         ));
       }

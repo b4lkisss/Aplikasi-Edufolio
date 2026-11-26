@@ -1,6 +1,56 @@
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../services/image_picker_service.dart';
 
 class PilihFotoDialog {
+  /// Cek apakah pengguna membuka lewat HP (mobile) atau Laptop / Desktop
+  static bool isMobile(BuildContext context) {
+    if (kIsWeb) {
+      return MediaQuery.of(context).size.width < 700;
+    }
+    return defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+  }
+
+  /// Fungsi responsive:
+  /// - Di HP: Muncul dialog "Pilih tindakan" (Kamera, Kamera Video, File)
+  /// - Di Laptop: Langsung membuka file picker / explorer laptop
+  static Future<void> pilihFotoResponsive(
+    BuildContext context, {
+    required Function(Uint8List bytes) onFotoTerpilih,
+    VoidCallback? onKameraVideo,
+  }) async {
+    if (isMobile(context)) {
+      show(
+        context,
+        onKamera: () async {
+          final bytes = await AppImagePicker.pickFromCamera();
+          if (bytes != null) {
+            onFotoTerpilih(bytes);
+          }
+        },
+        onKameraVideo: onKameraVideo ??
+            () async {
+              await AppImagePicker.pickVideo();
+            },
+        onFile: () async {
+          final bytes = await AppImagePicker.pickFromGallery();
+          if (bytes != null) {
+            onFotoTerpilih(bytes);
+          }
+        },
+      );
+    } else {
+      // Laptop / Desktop: langsung buka file picker sistem
+      final bytes = await AppImagePicker.pickFromGallery();
+      if (bytes != null) {
+        onFotoTerpilih(bytes);
+      }
+    }
+  }
+
   static void show(
     BuildContext context, {
     required VoidCallback onKamera,
@@ -63,8 +113,6 @@ class PilihFotoDialog {
                       Navigator.pop(ctx);
                       if (onKameraVideo != null) {
                         onKameraVideo();
-                      } else {
-                        onKamera();
                       }
                     },
                   ),
@@ -103,11 +151,10 @@ class PilihFotoDialog {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // KOTAK ICON
             Stack(
               clipBehavior: Clip.none,
               children: [
@@ -115,46 +162,39 @@ class PilihFotoDialog {
                   width: 58,
                   height: 58,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9), // Abu-abu terang persis gambar
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x1A000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
+                    color: const Color(0xFF2C2C2C),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFF404040), width: 1.5),
                   ),
-                  child: Center(
-                    child: Icon(
-                      icon,
-                      size: 30,
-                      color: iconColor,
-                    ),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: 28,
                   ),
                 ),
                 if (badgeColor != null)
                   Positioned(
-                    top: 14,
-                    left: 14,
+                    bottom: 2,
+                    right: 2,
                     child: Container(
-                      width: 5,
-                      height: 5,
+                      width: 14,
+                      height: 14,
                       decoration: BoxDecoration(
                         color: badgeColor,
                         shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF1E1E1E), width: 2),
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               label,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12.5,
+                color: Color(0xFFE2E8F0),
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
                 height: 1.2,
               ),

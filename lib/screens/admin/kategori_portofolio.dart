@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/master_data_service.dart';
 
 class KategoriPortofolio extends StatefulWidget {
   const KategoriPortofolio({super.key});
@@ -14,34 +15,83 @@ class _KategoriPortofolioState extends State<KategoriPortofolio> {
 
   int currentPage = 1;
   final int itemsPerPage = 5;
+  bool isLoading = false;
 
-  List<Map<String, dynamic>> daftarKategori = [
+  List<Map<String, dynamic>> daftarKategori = [];
+
+  final List<Map<String, dynamic>> defaultKategori = [
     {
+      'id': 1,
       'nama': 'Prestasi & Lomba',
-      'jumlah': '122 data',
+      'jumlah': '0 data',
       'icon': Icons.emoji_events_outlined,
     },
     {
+      'id': 2,
       'nama': 'Sertifikat',
-      'jumlah': '122 data',
+      'jumlah': '0 data',
       'icon': Icons.card_membership_outlined,
     },
     {
-      'nama': 'Project / Karya',
-      'jumlah': '122 data',
+      'id': 3,
+      'nama': 'Projek',
+      'jumlah': '0 data',
       'icon': Icons.military_tech_outlined,
     },
     {
+      'id': 4,
       'nama': 'Organisasi',
-      'jumlah': '122 data',
+      'jumlah': '0 data',
       'icon': Icons.account_tree_outlined,
     },
     {
-      'nama': 'Ekstrakulikuler',
-      'jumlah': '122 data',
+      'id': 5,
+      'nama': 'Ekstrakurikuler',
+      'jumlah': '0 data',
       'icon': Icons.menu_book_outlined,
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchKategori();
+  }
+
+  Future<void> _fetchKategori() async {
+    setState(() => isLoading = true);
+    final data = await MasterDataService.getDaftarKategori();
+    if (!mounted) return;
+    setState(() {
+      isLoading = false;
+      if (data.isNotEmpty) {
+        daftarKategori = data.map((item) {
+          return {
+            'id': item['id'],
+            'nama': item['nama'],
+            'jumlah': item['jumlah'] ?? '0 data',
+            'icon': _getIconForKategori(item['nama'] ?? ''),
+          };
+        }).toList();
+      } else {
+        daftarKategori = List.from(defaultKategori);
+      }
+    });
+  }
+
+  IconData _getIconForKategori(String nama) {
+    final n = nama.toLowerCase();
+    if (n.contains('lomba') || n.contains('prestasi')) {
+      return Icons.emoji_events_outlined;
+    } else if (n.contains('sertifikat')) {
+      return Icons.card_membership_outlined;
+    } else if (n.contains('projek') || n.contains('karya')) {
+      return Icons.military_tech_outlined;
+    } else if (n.contains('organisasi')) {
+      return Icons.account_tree_outlined;
+    }
+    return Icons.menu_book_outlined;
+  }
 
   // FORM TAMBAH / EDIT KATEGORI
   void tampilkanFormKategori({Map<String, dynamic>? kategori, int? index}) {
@@ -63,7 +113,7 @@ class _KategoriPortofolioState extends State<KategoriPortofolio> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nama Kategori',
+                  kategori == null ? 'Tambah Kategori' : 'Edit Kategori',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -116,7 +166,7 @@ class _KategoriPortofolioState extends State<KategoriPortofolio> {
                   width: double.infinity,
                   height: 42,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       final namaBaru = controller.text.trim();
                       if (namaBaru.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -127,26 +177,43 @@ class _KategoriPortofolioState extends State<KategoriPortofolio> {
                         return;
                       }
 
-                      setState(() {
-                        if (index == null) {
-                          daftarKategori.add({
-                            'nama': namaBaru,
-                            'jumlah': '0 data',
-                            'icon': Icons.folder_outlined,
-                          });
-                        } else {
-                          daftarKategori[index]['nama'] = namaBaru;
-                        }
-                      });
-
                       Navigator.pop(dialogContext);
 
+                      if (kategori == null) {
+                        final res = await MasterDataService.tambahKategori(namaBaru);
+                        if (res['success'] == true) {
+                          _fetchKategori();
+                        } else {
+                          setState(() {
+                            daftarKategori.add({
+                              'id': DateTime.now().millisecondsSinceEpoch,
+                              'nama': namaBaru,
+                              'jumlah': '0 data',
+                              'icon': _getIconForKategori(namaBaru),
+                            });
+                          });
+                        }
+                      } else {
+                        final idKategori = kategori['id'];
+                        if (idKategori != null) {
+                          await MasterDataService.updateKategori(idKategori, namaBaru);
+                          _fetchKategori();
+                        } else {
+                          setState(() {
+                            if (index != null && index < daftarKategori.length) {
+                              daftarKategori[index]['nama'] = namaBaru;
+                            }
+                          });
+                        }
+                      }
+
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            index == null
-                                ? 'Kategori berhasil ditambahkan'
-                                : 'Kategori berhasil diperbarui',
+                            kategori == null
+                                ? 'Kategori berhasil ditambahkan ke Supabase'
+                                : 'Kategori berhasil diperbarui di Supabase',
                           ),
                           backgroundColor: Colors.green,
                         ),
@@ -267,21 +334,28 @@ class _KategoriPortofolioState extends State<KategoriPortofolio> {
                       child: SizedBox(
                         height: 40,
                         child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              daftarKategori.removeAt(index);
-                              final totalPages =
-                                  (daftarKategori.length / itemsPerPage).ceil();
-                              if (currentPage > totalPages && totalPages > 0) {
-                                currentPage = totalPages;
-                              }
-                            });
-
+                          onPressed: () async {
                             Navigator.pop(dialogContext);
 
+                            final idKategori = kategori['id'];
+                            if (idKategori != null) {
+                              await MasterDataService.hapusKategori(idKategori);
+                              _fetchKategori();
+                            } else {
+                              setState(() {
+                                daftarKategori.removeAt(index);
+                                final totalPages =
+                                    (daftarKategori.length / itemsPerPage).ceil();
+                                if (currentPage > totalPages && totalPages > 0) {
+                                  currentPage = totalPages;
+                                }
+                              });
+                            }
+
+                            if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Kategori berhasil dihapus'),
+                                content: Text('Kategori berhasil dihapus dari Supabase'),
                                 backgroundColor: Colors.red,
                               ),
                             );

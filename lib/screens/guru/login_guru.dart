@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../siswa/portofolio_data.dart';
 
 class LoginGuru  extends StatefulWidget {
   const LoginGuru  ({super.key});
@@ -40,7 +41,7 @@ class _LoginGuruState extends State<LoginGuru> {
       isLoading = true;
     });
 
-    final account = await AuthService.loginGuru(id, pwd);
+    final account = await AuthService.login(id, pwd);
 
     if (!mounted) return;
     setState(() {
@@ -48,14 +49,39 @@ class _LoginGuruState extends State<LoginGuru> {
     });
 
     if (account != null) {
+      final role = account['role'] as String? ?? 'Guru';
+      final route = account['route'] as String? ?? '/dashboard-guru';
+      final user = account['user'] as Map<String, dynamic>?;
+
+      // Sinkronisasi profil
+      final dataStore = PortofolioDataStore();
+      if (role == 'Guru' && user != null) {
+        dataStore.guruProfile.value = GuruProfile(
+          nama: user['nama_guru'] ?? 'Ahmad Dahlan, S.Pd',
+          nip: user['nip'] ?? '',
+          email: user['email'] ?? '',
+          bidang: user['bidang_mengajar'] ?? 'RPL',
+        );
+      } else if (role == 'Siswa' && user != null) {
+        dataStore.profile.value = SiswaProfile(
+          nama: user['nama_siswa'] ?? 'Siswa',
+          nisn: user['nisn'] ?? '',
+          kelas: user['kelas'] ?? 'XII RPL B',
+          jurusan: user['jurusan'] ?? 'RPL',
+          email: user['email'] ?? '',
+          noTelpon: user['no_telepon'] ?? '',
+          jenisKelamin: user['jenis_kelamin'] ?? 'Laki-laki',
+        );
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Login berhasil! Selamat datang, ${account['nama']}'),
+          content: Text('Login berhasil! Selamat datang, ${account['nama']} ($role)'),
           backgroundColor: const Color(0xFF16A34A),
           duration: const Duration(seconds: 2),
         ),
       );
-      Navigator.pushReplacementNamed(context, '/dashboard-guru');
+      Navigator.pushReplacementNamed(context, route);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

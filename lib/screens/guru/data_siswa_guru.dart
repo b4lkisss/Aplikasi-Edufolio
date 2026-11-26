@@ -22,7 +22,7 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
   int currentPage = 1;
   final int itemsPerPage = 8;
 
-  List<Map<String, dynamic>> daftarSiswa = [
+  static final List<Map<String, dynamic>> defaultDaftarSiswa = [
     {
       'nama': 'Balqis Demes Piscesa',
       'nisn': '1234567890',
@@ -89,9 +89,12 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
     },
   ];
 
+  late List<Map<String, dynamic>> daftarSiswa;
+
   @override
   void initState() {
     super.initState();
+    daftarSiswa = List.from(defaultDaftarSiswa);
     _fetchSiswaFromSupabase();
   }
 
@@ -99,7 +102,24 @@ class _DataSiswaGuruState extends State<DataSiswaGuru> {
     final data = await MasterDataService.getDaftarSiswa();
     if (data.isNotEmpty && mounted) {
       setState(() {
-        daftarSiswa = data;
+        final existingNisns = data
+            .map((e) => e['nisn']?.toString().trim())
+            .where((s) => s != null && s.isNotEmpty)
+            .toSet();
+        final existingNames = data
+            .map((e) => e['nama']?.toString().trim().toLowerCase())
+            .where((s) => s != null && s.isNotEmpty)
+            .toSet();
+
+        final pelengkap = defaultDaftarSiswa.where((item) {
+          final nisn = item['nisn']?.toString().trim();
+          final nama = item['nama']?.toString().trim().toLowerCase();
+          final isNisnDuplicate = nisn != null && existingNisns.contains(nisn);
+          final isNamaDuplicate = nama != null && existingNames.contains(nama);
+          return !isNisnDuplicate && !isNamaDuplicate;
+        }).toList();
+
+        daftarSiswa = [...data, ...pelengkap];
       });
     }
   }

@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../services/image_picker_service.dart';
+import '../../services/storage_service.dart';
 import '../../widgets/pilih_foto_dialog.dart';
+import 'dashboard_siswa.dart';
 import 'portofolio_data.dart';
 
 class ProfilSiswa extends StatefulWidget {
@@ -60,6 +62,7 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
   void initState() {
     super.initState();
     final profile = dataStore.profile.value;
+    selectedImageBytes = profile.avatarBytes;
     namaController = TextEditingController(text: profile.nama);
     nisnController = TextEditingController(text: profile.nisn);
     emailController = TextEditingController(text: profile.email);
@@ -86,28 +89,29 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
   }
 
   Future<void> _pickAvatar() async {
-    PilihFotoDialog.show(
+    await PilihFotoDialog.pilihFotoResponsive(
       context,
-      onKamera: () async {
-        final bytes = await AppImagePicker.pickImage();
-        if (bytes != null) {
-          setState(() {
-            selectedImageBytes = bytes;
-          });
-        }
-      },
-      onFile: () async {
-        final bytes = await AppImagePicker.pickImage();
-        if (bytes != null) {
-          setState(() {
-            selectedImageBytes = bytes;
-          });
-        }
+      onFotoTerpilih: (bytes) {
+        setState(() {
+          selectedImageBytes = bytes;
+        });
       },
     );
   }
 
-  void _simpanProfil() {
+  Future<void> _simpanProfil() async {
+    String avatarUrl = dataStore.profile.value.avatarUrl;
+
+    if (selectedImageBytes != null) {
+      final uploadedUrl = await StorageService.uploadFotoProfil(
+        selectedImageBytes!,
+        role: 'siswa',
+      );
+      if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
+        avatarUrl = uploadedUrl;
+      }
+    }
+
     final updated = SiswaProfile(
       nama: namaController.text.trim().isNotEmpty
           ? namaController.text.trim()
@@ -124,11 +128,29 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
           ? noTelponController.text.trim()
           : '08819437942',
       jenisKelamin: selectedJenisKelamin,
-      avatarUrl: dataStore.profile.value.avatarUrl,
+      avatarUrl: avatarUrl,
+      avatarBytes: selectedImageBytes,
     );
 
     dataStore.profile.value = updated;
 
+    // Perbarui foto_profil & data di database Supabase jika ada siswa aktif
+    try {
+      final supabase = StorageService.supabase;
+      final email = emailController.text.trim();
+      final nisn = nisnController.text.trim();
+      if (email.isNotEmpty || nisn.isNotEmpty) {
+        await supabase.from('siswa').update({
+          'nama_siswa': updated.nama,
+          'kelas': updated.kelas,
+          'jurusan': updated.jurusan,
+          'no_telepon': updated.noTelpon,
+          if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
+        }).or('email.eq.$email,nisn.eq.$nisn');
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Row(
@@ -143,6 +165,16 @@ class _ProfilSiswaState extends State<ProfilSiswa> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
+
+    // Setelah disimpan mengarah ke dashboard
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DashboardSiswa()),
+      );
+    }
   }
 
   @override

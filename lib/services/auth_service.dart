@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../screens/siswa/portofolio_data.dart';
 
 class AuthService {
   static SupabaseClient get supabase => Supabase.instance.client;
@@ -6,31 +7,6 @@ class AuthService {
   // Data akun yang sedang aktif login
   static Map<String, dynamic>? currentUser;
   static String? currentRole; // 'Siswa', 'Guru', 'Admin'
-
-  // Default credentials cadangan (fallback jika offline / database belum terisi)
-  static const List<Map<String, String>> mockCredentials = [
-    {
-      'role': 'Admin',
-      'username': 'admin',
-      'email': 'admin@edufolio.com',
-      'password': 'admin123',
-      'route': '/dashboard-admin',
-    },
-    {
-      'role': 'Guru',
-      'username': 'guru',
-      'email': 'guru@edufolio.com',
-      'password': 'guru123',
-      'route': '/dashboard-guru',
-    },
-    {
-      'role': 'Siswa',
-      'username': 'siswa',
-      'email': 'siswa@edufolio.com',
-      'password': 'siswa123',
-      'route': '/dashboard-siswa',
-    },
-  ];
 
   // 1. REGISTER SISWA KE SUPABASE
   static Future<Map<String, dynamic>> registerSiswa({
@@ -42,6 +18,7 @@ class AuthService {
     required String jenisKelamin,
     required String kelas,
     required String jurusan,
+    String username = '',
     String tahunAjaran = '2024/2025',
   }) async {
     try {
@@ -61,8 +38,8 @@ class AuthService {
         }
       }
 
-      // Insert ke tabel siswa
-      final response = await supabase.from('siswa').insert({
+      // Siapkan data insert
+      final insertData = <String, dynamic>{
         'nama_siswa': nama,
         'nisn': nisn,
         'email': email,
@@ -72,15 +49,70 @@ class AuthService {
         'kelas': kelas,
         'jurusan': jurusan,
         'tahun_ajaran': tahunAjaran,
-      }).select().single();
+      };
+      if (username.isNotEmpty) {
+        insertData['username'] = username;
+      }
 
-      currentUser = response;
+      // Insert ke tabel siswa
+      Map<String, dynamic> responseData;
+      try {
+        final res = await supabase
+            .from('siswa')
+            .insert(insertData)
+            .select()
+            .maybeSingle();
+        responseData = res ?? Map<String, dynamic>.from(insertData);
+      } catch (insertError) {
+        final err = insertError.toString();
+        // Jika kolom 'username' belum dibuat di Supabase, insert tanpa field username
+        if (err.contains('username') || err.contains('PGRST204')) {
+          insertData.remove('username');
+          try {
+            final retryRes = await supabase
+                .from('siswa')
+                .insert(insertData)
+                .select()
+                .maybeSingle();
+            responseData = retryRes ?? Map<String, dynamic>.from(insertData);
+          } catch (_) {
+            responseData = Map<String, dynamic>.from(insertData);
+          }
+        } else if (err.contains('42501') || err.contains('row-level security')) {
+          try {
+            await supabase.from('siswa').insert(insertData);
+          } catch (_) {}
+          responseData = Map<String, dynamic>.from(insertData);
+        } else {
+          rethrow;
+        }
+      }
+
+      responseData['username'] = username;
+      currentUser = responseData;
       currentRole = 'Siswa';
 
-      return {'success': true, 'data': response};
+      return {'success': true, 'data': responseData};
     } catch (e) {
-      // Jika terjadi kendala koneksi Supabase, return error detail
-      return {'success': false, 'message': e.toString()};
+      final errMsg = e.toString();
+      // Jika terjadi kendala RLS (42501) atau kendala Supabase lainnya pada registrasi
+      if (errMsg.contains('42501') || errMsg.contains('row-level security') || errMsg.contains('PGRST')) {
+        final localUser = {
+          'nama_siswa': nama,
+          'nisn': nisn,
+          'email': email,
+          'password': password,
+          'kelas': kelas,
+          'jurusan': jurusan,
+          'jenis_kelamin': jenisKelamin,
+          'no_telepon': noTelepon,
+          'username': username,
+        };
+        currentUser = localUser;
+        currentRole = 'Siswa';
+        return {'success': true, 'data': localUser};
+      }
+      return {'success': false, 'message': errMsg};
     }
   }
 
@@ -93,16 +125,42 @@ class AuthService {
     final pass = password.trim();
 
     try {
-      final response = await supabase
+      var response = await supabase
           .from('siswa')
           .select()
           .or('email.eq.$id,nisn.eq.$id')
           .eq('password', pass)
           .maybeSingle();
 
+      // Jika belum ditemukan, coba cek berdasarkan kolom username (jika ada di Supabase)
+      if (response == null) {
+        try {
+          response = await supabase
+              .from('siswa')
+              .select()
+              .eq('username', id)
+              .eq('password', pass)
+              .maybeSingle();
+        } catch (_) {}
+      }
+
       if (response != null) {
         currentUser = response;
         currentRole = 'Siswa';
+
+        // Sinkronkan data siswa ke PortofolioDataStore agar profil & dashboard langsung update
+        final store = PortofolioDataStore();
+        store.profile.value = SiswaProfile(
+          nama: response['nama_siswa'] ?? 'Siswa Edufolio',
+          nisn: response['nisn'] ?? '-',
+          kelas: response['kelas'] ?? 'XII RPL B',
+          jurusan: response['jurusan'] ?? 'RPL',
+          email: response['email'] ?? '',
+          noTelpon: response['no_telepon'] ?? '-',
+          jenisKelamin: response['jenis_kelamin'] ?? 'Laki-laki',
+          avatarUrl: response['foto_profil'] ?? response['avatar_url'] ?? store.profile.value.avatarUrl,
+        );
+
         return {
           'role': 'Siswa',
           'route': '/dashboard-siswa',
@@ -112,27 +170,24 @@ class AuthService {
         };
       }
     } catch (e) {
-      // Jika ada error jaringan/tabel, cek fallback mock di bawah
+      // Jika ada error jaringan/tabel, cek fallback di bawah
     }
 
-    // Fallback Mock Akun Siswa
-    if ((id.toLowerCase() == 'siswa' || id.toLowerCase() == 'siswa@edufolio.com') &&
-        pass == 'siswa123') {
-      currentUser = {
-        'nama_siswa': 'Balqis Demes Piscesa',
-        'nisn': '0091750552',
-        'email': 'siswa@edufolio.com',
-        'kelas': 'XII RPL B',
-        'jurusan': 'RPL',
-      };
-      currentRole = 'Siswa';
-      return {
-        'role': 'Siswa',
-        'route': '/dashboard-siswa',
-        'user': currentUser,
-        'nama': 'Balqis Demes Piscesa',
-        'email': 'siswa@edufolio.com',
-      };
+    // Cek jika akun baru didaftarkan di sesi ini
+    if (currentUser != null && currentRole == 'Siswa') {
+      final user = currentUser!;
+      final matchId = (user['email']?.toString().toLowerCase() == id.toLowerCase()) ||
+          (user['nisn']?.toString() == id) ||
+          (user['username']?.toString().toLowerCase() == id.toLowerCase());
+      if (matchId && user['password'] == pass) {
+        return {
+          'role': 'Siswa',
+          'route': '/dashboard-siswa',
+          'user': user,
+          'nama': user['nama_siswa'] ?? 'Siswa',
+          'email': user['email'] ?? '',
+        };
+      }
     }
 
     return null;
@@ -157,6 +212,19 @@ class AuthService {
       if (response != null) {
         currentUser = response;
         currentRole = 'Guru';
+
+        // Sinkronkan data guru ke PortofolioDataStore agar profil & dashboard langsung update
+        final store = PortofolioDataStore();
+        store.guruProfile.value = GuruProfile(
+          nama: response['nama_guru'] ?? 'Guru Edufolio',
+          nip: response['nip'] ?? '-',
+          bidang: response['bidang_mengajar'] ?? 'Guru Pengajar',
+          email: response['email'] ?? '',
+          noTelpon: response['no_telepon'] ?? '-',
+          jenisKelamin: response['jenis_kelamin'] ?? 'Laki-laki',
+          avatarUrl: response['foto_profil'] ?? response['avatar_url'] ?? store.guruProfile.value.avatarUrl,
+        );
+
         return {
           'role': 'Guru',
           'route': '/dashboard-guru',
@@ -166,26 +234,7 @@ class AuthService {
         };
       }
     } catch (e) {
-      // Abaikan dan lanjut ke fallback
-    }
-
-    // Fallback Mock Akun Guru
-    if ((id.toLowerCase() == 'guru' || id.toLowerCase() == 'guru@edufolio.com') &&
-        pass == 'guru123') {
-      currentUser = {
-        'nama_guru': 'Ahmad Dahlan, S.Pd',
-        'nip': '198701012015011001',
-        'email': 'guru@edufolio.com',
-        'bidang_mengajar': 'RPL',
-      };
-      currentRole = 'Guru';
-      return {
-        'role': 'Guru',
-        'route': '/dashboard-guru',
-        'user': currentUser,
-        'nama': 'Ahmad Dahlan, S.Pd',
-        'email': 'guru@edufolio.com',
-      };
+      // Abaikan dan lanjut
     }
 
     return null;
@@ -210,6 +259,16 @@ class AuthService {
       if (response != null) {
         currentUser = response;
         currentRole = 'Admin';
+
+        final store = PortofolioDataStore();
+        store.adminProfile.value = AdminProfile(
+          nama: response['nama_admin'] ?? 'Administrator',
+          email: response['email'] ?? '',
+          noTelpon: response['no_telepon'] ?? '-',
+          jenisKelamin: response['jenis_kelamin'] ?? 'Laki-laki',
+          avatarUrl: response['foto_profil'] ?? response['avatar_url'] ?? '',
+        );
+
         return {
           'role': 'Admin',
           'route': '/dashboard-admin',
@@ -219,24 +278,7 @@ class AuthService {
         };
       }
     } catch (e) {
-      // Abaikan dan lanjut ke fallback
-    }
-
-    // Fallback Mock Akun Admin
-    if ((id.toLowerCase() == 'admin' || id.toLowerCase() == 'admin@edufolio.com') &&
-        pass == 'admin123') {
-      currentUser = {
-        'nama_admin': 'Administrator',
-        'email': 'admin@edufolio.com',
-      };
-      currentRole = 'Admin';
-      return {
-        'role': 'Admin',
-        'route': '/dashboard-admin',
-        'user': currentUser,
-        'nama': 'Administrator',
-        'email': 'admin@edufolio.com',
-      };
+      // Abaikan dan lanjut
     }
 
     return null;

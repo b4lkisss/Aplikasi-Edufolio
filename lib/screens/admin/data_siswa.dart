@@ -24,97 +24,10 @@ class _DataSiswaState extends State<DataSiswa> {
   int currentPage = 1;
   final int itemsPerPage = 9;
 
-  // DATA CONTOH SISWA
-  List<Map<String, dynamic>> daftarSiswa = [
-    {
-      'nama': 'Balqis Demes Piscesa',
-      'nisn': '1234567890',
-      'kelas': 'XII RPL B',
-      'jurusan': 'RPL',
-      'angkatan': '2024',
-      'avatar': 0,
-    },
-    {
-      'nama': 'Andi Ardiansyah',
-      'nisn': '1234567891',
-      'kelas': 'XII RPL B',
-      'jurusan': 'RPL',
-      'angkatan': '2024',
-      'avatar': 1,
-    },
-    {
-      'nama': 'Siti Aulia',
-      'nisn': '1234567892',
-      'kelas': 'XI RPL A',
-      'jurusan': 'RPL',
-      'angkatan': '2025',
-      'avatar': 0,
-    },
-    {
-      'nama': 'Muhammad Rizky',
-      'nisn': '1234567893',
-      'kelas': 'XI TKJ A',
-      'jurusan': 'TKJ',
-      'angkatan': '2025',
-      'avatar': 1,
-    },
-    {
-      'nama': 'Nadia Putri',
-      'nisn': '1234567894',
-      'kelas': 'XII RPL B',
-      'jurusan': 'RPL',
-      'angkatan': '2024',
-      'avatar': 0,
-    },
-    {
-      'nama': 'Dimas Pratama',
-      'nisn': '1234567895',
-      'kelas': 'X TKJ B',
-      'jurusan': 'TKJ',
-      'angkatan': '2026',
-      'avatar': 1,
-    },
-    {
-      'nama': 'Ayu Lestari',
-      'nisn': '1234567896',
-      'kelas': 'XI RPL A',
-      'jurusan': 'RPL',
-      'angkatan': '2025',
-      'avatar': 0,
-    },
-    {
-      'nama': 'Fajar Ramadhan',
-      'nisn': '1234567897',
-      'kelas': 'XII TKJ A',
-      'jurusan': 'TKJ',
-      'angkatan': '2024',
-      'avatar': 1,
-    },
-    {
-      'nama': 'Putri Amelia',
-      'nisn': '1234567898',
-      'kelas': 'X RPL A',
-      'jurusan': 'RPL',
-      'angkatan': '2026',
-      'avatar': 0,
-    },
-    {
-      'nama': 'Rian Saputra',
-      'nisn': '1234567899',
-      'kelas': 'XI TKJ A',
-      'jurusan': 'TKJ',
-      'angkatan': '2025',
-      'avatar': 1,
-    },
-    {
-      'nama': 'Dewi Anggraini',
-      'nisn': '1234567800',
-      'kelas': 'X RPL B',
-      'jurusan': 'RPL',
-      'angkatan': '2026',
-      'avatar': 0,
-    },
-  ];
+  // DATA SISWA DARI SUPABASE
+  List<Map<String, dynamic>> daftarSiswa = [];
+
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -124,8 +37,9 @@ class _DataSiswaState extends State<DataSiswa> {
 
   Future<void> _fetchSiswaFromSupabase() async {
     final data = await MasterDataService.getDaftarSiswa();
-    if (data.isNotEmpty && mounted) {
+    if (mounted) {
       setState(() {
+        isLoading = false;
         daftarSiswa = data;
       });
     }
@@ -728,58 +642,64 @@ class _DataSiswaState extends State<DataSiswa> {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
                 children: [
-                  _filterDropdown(
-                    selectedKelas,
-                    [
-                      'Kelas',
-                      'X RPL A',
-                      'X RPL B',
-                      'XI RPL A',
-                      'XI RPL B',
-                      'XII RPL B',
-                      'X TKJ B',
-                      'XI TKJ A',
-                      'XII TKJ A',
-                    ],
-                    (value) {
-                      setState(() {
-                        selectedKelas = value!;
-                        currentPage = 1;
-                      });
-                    },
+                  Expanded(
+                    child: _filterDropdown(
+                      selectedKelas,
+                      [
+                        'Kelas',
+                        'X RPL A',
+                        'X RPL B',
+                        'XI RPL A',
+                        'XI RPL B',
+                        'XII RPL B',
+                        'X TKJ B',
+                        'XI TKJ A',
+                        'XII TKJ A',
+                      ],
+                      (value) {
+                        setState(() {
+                          selectedKelas = value!;
+                          currentPage = 1;
+                        });
+                      },
+                    ),
                   ),
                   const SizedBox(width: 6),
-                  _filterDropdown(
-                    selectedJurusan,
-                    [
-                      'Jurusan',
-                      'RPL',
-                      'TKJ',
-                    ],
-                    (value) {
-                      setState(() {
-                        selectedJurusan = value!;
-                        currentPage = 1;
-                      });
-                    },
+                  Expanded(
+                    child: _filterDropdown(
+                      selectedJurusan,
+                      [
+                        'Jurusan',
+                        'RPL',
+                        'TKJ',
+                      ],
+                      (value) {
+                        setState(() {
+                          selectedJurusan = value!;
+                          currentPage = 1;
+                        });
+                      },
+                    ),
                   ),
                   const SizedBox(width: 6),
-                  _filterDropdown(
-                    selectedAngkatan,
-                    [
-                      'Angkatan',
-                      '2024',
-                      '2025',
-                      '2026',
-                    ],
-                    (value) {
-                      setState(() {
-                        selectedAngkatan = value!;
-                        currentPage = 1;
-                      });
-                    },
+                  Expanded(
+                    child: _filterDropdown(
+                      selectedAngkatan,
+                      [
+                        'Angkatan',
+                        '2024',
+                        '2025',
+                        '2026',
+                      ],
+                      (value) {
+                        setState(() {
+                          selectedAngkatan = value!;
+                          currentPage = 1;
+                        });
+                      },
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
 
                   // TOMBOL TAMBAH SISWA (UKURAN PERSIS SAMA DENGAN DATA GURU)
                   InkWell(
@@ -1227,7 +1147,6 @@ class _DataSiswaState extends State<DataSiswa> {
   ) {
     return Container(
       height: 38,
-      width: 78,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,

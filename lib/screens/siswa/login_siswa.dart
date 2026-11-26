@@ -42,7 +42,7 @@ class _LoginSiswaState extends State<LoginSiswa> {
       isLoading = true;
     });
 
-    final account = await AuthService.loginSiswa(identifier, password);
+    final account = await AuthService.login(identifier, password);
 
     if (!mounted) return;
     setState(() {
@@ -50,30 +50,43 @@ class _LoginSiswaState extends State<LoginSiswa> {
     });
 
     if (account != null) {
+      final role = account['role'] as String? ?? 'Siswa';
+      final route = account['route'] as String? ?? '/dashboard-siswa';
       final user = account['user'] as Map<String, dynamic>?;
-      if (user != null) {
-        // Sinkronkan data profil siswa yang login
-        final dataStore = PortofolioDataStore();
-        dataStore.profile.value = SiswaProfile(
-          nama: user['nama_siswa'] ?? 'Siswa',
-          nisn: user['nisn'] ?? '',
-          kelas: user['kelas'] ?? 'XII RPL B',
-          jurusan: user['jurusan'] ?? 'RPL',
-          email: user['email'] ?? '',
-          noTelpon: user['no_telepon'] ?? '',
-          jenisKelamin: user['jenis_kelamin'] ?? 'Laki-laki',
-        );
+
+      final dataStore = PortofolioDataStore();
+      if (role == 'Siswa') {
+        if (user != null) {
+          dataStore.profile.value = SiswaProfile(
+            nama: user['nama_siswa'] ?? 'Siswa',
+            nisn: user['nisn'] ?? '',
+            kelas: user['kelas'] ?? 'XII RPL B',
+            jurusan: user['jurusan'] ?? 'RPL',
+            email: user['email'] ?? '',
+            noTelpon: user['no_telepon'] ?? '',
+            jenisKelamin: user['jenis_kelamin'] ?? 'Laki-laki',
+          );
+        }
+      } else if (role == 'Guru') {
+        if (user != null) {
+          dataStore.guruProfile.value = GuruProfile(
+            nama: user['nama_guru'] ?? 'Ahmad Dahlan, S.Pd',
+            nip: user['nip'] ?? '',
+            email: user['email'] ?? '',
+            bidang: user['bidang_mengajar'] ?? 'RPL',
+          );
+        }
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Login berhasil! Selamat datang, ${account['nama']}'),
+          content: Text('Login berhasil! Selamat datang, ${account['nama']} ($role)'),
           backgroundColor: const Color(0xFF16A34A),
           duration: const Duration(seconds: 2),
         ),
       );
 
-      Navigator.pushReplacementNamed(context, '/dashboard-siswa');
+      Navigator.pushReplacementNamed(context, route);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -83,13 +96,6 @@ class _LoginSiswaState extends State<LoginSiswa> {
         ),
       );
     }
-  }
-
-  void _quickFillSiswa() {
-    setState(() {
-      emailController.text = 'siswa';
-      passwordController.text = 'siswa123';
-    });
   }
 
   @override
@@ -209,35 +215,7 @@ class _LoginSiswaState extends State<LoginSiswa> {
                   ),
                 ),
 
-                const SizedBox(height: 10),
-
-                // CHIP BANTUAN AUTOFILL DEMO AKUN
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    onTap: _quickFillSiswa,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        '💡 Isi Akun Siswa (siswa/siswa123)',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF356DA8),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 14),
+                const SizedBox(height: 18),
 
                 // Tombol Login
                 SizedBox(

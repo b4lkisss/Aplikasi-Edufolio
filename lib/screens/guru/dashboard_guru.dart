@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../services/master_data_service.dart';
 import '../../widgets/logout_dialog.dart';
 import 'profil_guru.dart';
 import 'data_siswa_guru.dart';
 import 'verifikasi_portofolio_guru.dart';
 import 'detail_portofolio_guru.dart';
+import '../admin/grafik_statistik.dart';
 import '../siswa/portofolio_siswa.dart';
 import '../siswa/portofolio_data.dart';
 import '../notifikasi_screen.dart';
@@ -24,69 +26,29 @@ class _DashboardGuruState extends State<DashboardGuru> {
 
   int selectedMenu = 0;
   String selectedPeriod = 'This Month';
+  int totalSiswaCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    dataStore.fetchFromSupabase();
+    _fetchSiswaCount();
+  }
+
+  Future<void> _fetchSiswaCount() async {
+    final list = await MasterDataService.getDaftarSiswa();
+    if (!mounted) return;
+    setState(() {
+      totalSiswaCount = list.length;
+    });
+  }
 
   final List<Map<String, dynamic>> menuItems = [
     {'icon': Icons.grid_view_rounded, 'title': 'Dashboard'},
     {'icon': Icons.group_rounded, 'title': 'Data Siswa'},
     {'icon': Icons.assignment_turned_in_rounded, 'title': 'Verifikasi Portofolio'},
-    {'icon': Icons.notifications_rounded, 'title': 'Notifikasi'},
+    {'icon': Icons.bar_chart_rounded, 'title': 'Grafik'},
     {'icon': Icons.person_rounded, 'title': 'Profil Guru'},
-  ];
-
-  final List<Map<String, dynamic>> pengajuanMenunggu = [
-    {
-      'id': 1,
-      'nama_siswa': 'Balqis Demes Piscesa',
-      'kelas': 'XII RPL B',
-      'judul': 'Juara 1 Lomba Web design',
-      'kategori': 'Prestasi & Lomba • 2024',
-      'waktu': '2 Jam yang lalu',
-      'status': 'Menunggu',
-      'deskripsi':
-          'Memenangkan juara 1 kompetisi desain web tingkat provinsi dengan tema edukasi interaktif.',
-      'peran': 'Frontend Developer & UI/UX Designer',
-      'skills': ['Flutter Web', 'Figma', 'Dart'],
-      'link': 'https://github.com/balqis/web-design-champion',
-      'avatar':
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-      'thumbnail':
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-      'id': 2,
-      'nama_siswa': 'Balqis Demes Piscesa',
-      'kelas': 'XII RPL B',
-      'judul': 'Juara 1 Lomba Web design',
-      'kategori': 'Prestasi & Lomba • 2024',
-      'waktu': '2 Jam yang lalu',
-      'status': 'Menunggu',
-      'deskripsi':
-          'Pengembangan sistem dashboard portofolio siswa responsif dan cepat.',
-      'peran': 'Mobile Developer',
-      'skills': ['Flutter', 'REST API'],
-      'link': 'https://github.com/balqis/portfolio-app',
-      'avatar':
-          'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80',
-      'thumbnail':
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-      'id': 3,
-      'nama_siswa': 'Ahmad Fauzan',
-      'kelas': 'XII RPL A',
-      'judul': 'Sertifikat Flutter Developer',
-      'kategori': 'Sertifikat • 2024',
-      'waktu': '5 Jam yang lalu',
-      'status': 'Menunggu',
-      'deskripsi': 'Kelulusan program sertifikasi Flutter tingkat intermediate.',
-      'peran': 'Peserta Program',
-      'skills': ['Flutter', 'Dart'],
-      'link': 'https://cert.dev/flutter-fauzan',
-      'avatar':
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-      'thumbnail':
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
-    },
   ];
 
   @override
@@ -234,51 +196,57 @@ class _DashboardGuruState extends State<DashboardGuru> {
               const SizedBox(height: 16),
 
               // BANNER SAPAAN GURU
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: primaryBlue,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x33254BD1),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
+              ValueListenableBuilder<GuruProfile>(
+                valueListenable: dataStore.guruProfile,
+                builder: (context, guru, _) {
+                  final namaTampil = guru.nama.isNotEmpty ? guru.nama : 'Guru';
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: primaryBlue,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x33254BD1),
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Halo, Bu Balqis',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Halo, $namaTampil',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Selamat datang, $namaTampil 👋',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Kelola dan pantau data portofolio siswa dengan mudah.',
+                          style: TextStyle(
+                            color: Color(0xE6FFFFFF),
+                            fontSize: 12,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 6),
-                    Text(
-                      'Selamat datang, Balqis 👋',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Kelola dan pantau data portofolio siswa dengan mudah.',
-                      style: TextStyle(
-                        color: Color(0xE6FFFFFF),
-                        fontSize: 12,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
 
               const SizedBox(height: 18),
@@ -287,11 +255,18 @@ class _DashboardGuruState extends State<DashboardGuru> {
               ValueListenableBuilder<List<PortofolioItem>>(
                 valueListenable: dataStore.portofolioList,
                 builder: (context, allItems, _) {
+                  // Filter berdasarkan periode waktu yang dipilih
+                  final filteredItems = allItems.where((i) {
+                    final dt = MasterDataService.parseTanggalString(i.tanggalUnggah) ??
+                        MasterDataService.parseTanggalString(i.tanggal);
+                    return MasterDataService.matchFilterPeriode(dt, selectedPeriod);
+                  }).toList();
+
                   final totalMenunggu =
-                      allItems.where((i) => i.status == 'Menunggu').length;
-                  final totalPorto = allItems.length;
-                  final totalPrestasi = allItems
-                      .where((i) => i.kategori.contains('Prestasi'))
+                      filteredItems.where((i) => i.status == 'Menunggu').length;
+                  final totalPorto = filteredItems.length;
+                  final totalPrestasi = filteredItems
+                      .where((i) => i.kategori.toLowerCase().contains('prestasi') || i.kategori.toLowerCase().contains('lomba'))
                       .length;
 
                   return GridView.count(
@@ -306,8 +281,9 @@ class _DashboardGuruState extends State<DashboardGuru> {
                       _buildStatCard(
                         icon: Icons.people_alt_rounded,
                         title: 'Total Siswa',
-                        value: '32',
-                        iconColor: const Color(0xFF4F46E5),
+                        value: '$totalSiswaCount',
+                        iconColor: const Color(0xFF5E48E8),
+                        cardBg: const Color(0xFFF0EDFF), // Lavender pastel
                         onTap: () {
                           Navigator.push(
                             context,
@@ -321,7 +297,8 @@ class _DashboardGuruState extends State<DashboardGuru> {
                         icon: Icons.access_time_filled_rounded,
                         title: 'Menunggu',
                         value: '$totalMenunggu',
-                        iconColor: const Color(0xFFEA580C),
+                        iconColor: const Color(0xFF0D9488),
+                        cardBg: const Color(0xFFE5F6F3), // Mint pastel
                         onTap: () {
                           Navigator.push(
                             context,
@@ -338,6 +315,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
                         title: 'Portofolio',
                         value: '$totalPorto',
                         iconColor: const Color(0xFF2563EB),
+                        cardBg: const Color(0xFFEAF1FF), // Baby blue
                         onTap: () {
                           Navigator.push(
                             context,
@@ -354,7 +332,8 @@ class _DashboardGuruState extends State<DashboardGuru> {
                         icon: Icons.emoji_events_rounded,
                         title: 'Prestasi',
                         value: '$totalPrestasi',
-                        iconColor: const Color(0xFFFFA000),
+                        iconColor: const Color(0xFFD97706),
+                        cardBg: const Color(0xFFFFF3DF), // Cream pastel
                         onTap: () {
                           Navigator.push(
                             context,
@@ -374,12 +353,12 @@ class _DashboardGuruState extends State<DashboardGuru> {
 
               const SizedBox(height: 22),
 
-              // SECTION PENGAJUAN MENUNGGU VERIFIKASI
+              // SECTION PENGAJUAN VERIFIKASI
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Pengajuan Menunggu Verifikasi',
+                    'Pengajuan Verifikasi',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -413,58 +392,79 @@ class _DashboardGuruState extends State<DashboardGuru> {
 
               const SizedBox(height: 12),
 
-              // LIST PENGAJUAN (SINKRON DARI DATA STORE)
-              ValueListenableBuilder<List<PortofolioItem>>(
-                valueListenable: dataStore.portofolioList,
-                builder: (context, items, _) {
-                  final pendingItems =
-                      items.where((i) => i.status == 'Menunggu').take(3).toList();
+              // LIST PENGAJUAN (CARD DI DALAM CONTAINER BESAR DENGAN EMPTY STATE & ICON BESAR)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: ValueListenableBuilder<List<PortofolioItem>>(
+                  valueListenable: dataStore.portofolioList,
+                  builder: (context, items, _) {
+                    // Filter pengajuan sesuai periode waktu yang dipilih
+                    final pendingFiltered = items.where((i) {
+                      if (i.status != 'Menunggu') return false;
+                      final dt = MasterDataService.parseTanggalString(i.tanggalUnggah) ??
+                          MasterDataService.parseTanggalString(i.tanggal);
+                      return MasterDataService.matchFilterPeriode(dt, selectedPeriod);
+                    }).toList();
 
-                  if (pendingItems.isEmpty) {
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: const Column(
-                        children: [
-                          Icon(
-                            Icons.check_circle_outline_rounded,
-                            size: 40,
-                            color: Color(0xFF10B981),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Semua Pengajuan Sudah Diverifikasi',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
+                    if (pendingFiltered.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE2E8F0),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.inbox_rounded,
+                                  size: 46,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Tidak ada pengajuan portofolio yang menunggu antrean saat ini.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF64748B),
+                            const SizedBox(height: 14),
+                            Text(
+                              'Belum ada pengajuan verifikasi (${selectedPeriod})',
+                              style: const TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Tidak ada siswa yang mengunggah portofolio pada periode waktu ini.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      children: pendingFiltered
+                          .take(5)
+                          .map((item) => _buildPengajuanCard(item.toMap()))
+                          .toList(),
                     );
-                  }
-
-                  return Column(
-                    children: pendingItems
-                        .map((item) => _buildPengajuanCard(item.toMap()))
-                        .toList(),
-                  );
-                },
+                  },
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -481,22 +481,22 @@ class _DashboardGuruState extends State<DashboardGuru> {
     required String title,
     required String value,
     required Color iconColor,
+    required Color cardBg,
     VoidCallback? onTap,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+          color: cardBg,
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -504,35 +504,35 @@ class _DashboardGuruState extends State<DashboardGuru> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // JUDUL DI PALING ATAS
+            // 1. JUDUL DI PALING ATAS
             Text(
               title,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 14.5,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E3A8A),
+                color: Color(0xFF1E293B),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
-            // ICON LEBIH BESARRRRR DI TENGAH (UKURAN 92)
+            // 2. ICON LEBIH BESAR DI TENGAH
             Expanded(
               child: Center(
                 child: Icon(
                   icon,
-                  size: 92,
+                  size: 78,
                   color: iconColor,
                 ),
               ),
             ),
-            // ANGKA DI PALING BAWAH
+            // 3. ANGKA DI PALING BAWAH
             Text(
               value,
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF64748B),
+                color: Color(0xFF0F172A),
               ),
             ),
           ],
@@ -660,54 +660,60 @@ class _DashboardGuruState extends State<DashboardGuru> {
         child: Column(
           children: [
             // HEADER DRAWER DENGAN FOTO PROFIL GURU
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-              width: double.infinity,
-              color: primaryBlue,
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+            ValueListenableBuilder<GuruProfile>(
+              valueListenable: dataStore.guruProfile,
+              builder: (context, guru, _) {
+                return Container(
+                  padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                  width: double.infinity,
+                  color: primaryBlue,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                          image: DecorationImage(
+                            image: guru.avatarBytes != null
+                                ? MemoryImage(guru.avatarBytes!)
+                                    as ImageProvider
+                                : NetworkImage(guru.avatarUrl),
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                        fit: BoxFit.cover,
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Balqis Demes Piscesa',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              guru.nama,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Guru • ${guru.bidang}',
+                              style: const TextStyle(
+                                color: Color(0xFFBAE6FD),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
-                        SizedBox(height: 3),
-                        Text(
-                          'Guru Pembimbing',
-                          style: TextStyle(
-                            color: Color(0xFFBAE6FD),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
 
             const SizedBox(height: 12),
@@ -729,18 +735,15 @@ class _DashboardGuruState extends State<DashboardGuru> {
                         });
                         Navigator.pop(context); // Tutup drawer
 
-                        if (index == 0) {
-                          // Dashboard
-                        } else if (index == 1) {
-                          // Data Siswa
+                        final title = menuItems[index]['title'];
+                        if (title == 'Data Siswa') {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => const DataSiswaGuru(),
                             ),
                           );
-                        } else if (index == 2) {
-                          // Verifikasi Portofolio
+                        } else if (title == 'Verifikasi Portofolio') {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -748,17 +751,14 @@ class _DashboardGuruState extends State<DashboardGuru> {
                                   const VerifikasiPortofolioGuru(),
                             ),
                           );
-                        } else if (index == 3) {
-                          // Notifikasi
+                        } else if (title == 'Grafik') {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const NotifikasiScreen(role: 'guru'),
+                              builder: (context) => const GrafikStatistik(),
                             ),
                           );
-                        } else if (index == 4) {
-                          // Profil Guru
+                        } else if (title == 'Profil Guru') {
                           Navigator.push(
                             context,
                             MaterialPageRoute(

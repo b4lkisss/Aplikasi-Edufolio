@@ -1,7 +1,10 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../services/image_picker_service.dart';
+import '../../services/storage_service.dart';
 import '../../widgets/pilih_foto_dialog.dart';
+import '../siswa/portofolio_data.dart';
+import 'dashboard_admin.dart';
 
 class ProfilAdmin extends StatefulWidget {
   const ProfilAdmin({super.key});
@@ -32,6 +35,21 @@ class _ProfilAdminState extends State<ProfilAdmin> {
   Uint8List? fotoBytes;
 
   final Color fieldColor = const Color(0xFFD9D9D9); // Warna abu-abu field sesuai gambar
+
+  @override
+  void initState() {
+    super.initState();
+    final admin = PortofolioDataStore().adminProfile.value;
+    fotoBytes = admin.avatarBytes;
+    namaController.text = admin.nama;
+    emailController.text = admin.email;
+    tanggalLahirController.text = admin.tglLahir;
+    noTelponController.text = admin.noTelpon;
+    selectedJenisKelamin =
+        admin.jenisKelamin.toLowerCase().contains('perempuan')
+            ? 'perempuan'
+            : 'laki-laki';
+  }
 
   @override
   void dispose() {
@@ -78,45 +96,71 @@ class _ProfilAdminState extends State<ProfilAdmin> {
 
   // FUNGSI 2: PICKER FOTO PROFIL (MEMBUKA FILE EXPLORER)
   Future<void> _pilihFoto() async {
-    PilihFotoDialog.show(
+    await PilihFotoDialog.pilihFotoResponsive(
       context,
-      onKamera: () async {
-        final bytes = await AppImagePicker.pickImage();
-        if (bytes != null) {
-          setState(() {
-            fotoBytes = bytes;
-          });
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Foto profil berhasil diubah!'),
-              backgroundColor: Color(0xFF254BD1),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      },
-      onFile: () async {
-        final bytes = await AppImagePicker.pickImage();
-        if (bytes != null) {
-          setState(() {
-            fotoBytes = bytes;
-          });
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Foto profil berhasil diubah!'),
-              backgroundColor: Color(0xFF254BD1),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
+      onFotoTerpilih: (bytes) {
+        setState(() {
+          fotoBytes = bytes;
+        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Foto profil berhasil diubah!'),
+            backgroundColor: Color(0xFF254BD1),
+            duration: Duration(seconds: 2),
+          ),
+        );
       },
     );
   }
 
   // FUNGSI SIMPAN PROFIL
-  void _simpanProfil() {
+  Future<void> _simpanProfil() async {
+    String avatarUrl = PortofolioDataStore().adminProfile.value.avatarUrl;
+
+    if (fotoBytes != null) {
+      final uploadedUrl = await StorageService.uploadFotoProfil(
+        fotoBytes!,
+        role: 'admin',
+      );
+      if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
+        avatarUrl = uploadedUrl;
+      }
+    }
+
+    final updated = AdminProfile(
+      nama: namaController.text.trim().isNotEmpty
+          ? namaController.text.trim()
+          : 'Administrator',
+      email: emailController.text.trim().isNotEmpty
+          ? emailController.text.trim()
+          : 'admin@edufolio.com',
+      noTelpon: noTelponController.text.trim().isNotEmpty
+          ? noTelponController.text.trim()
+          : '081234567890',
+      jenisKelamin: selectedJenisKelamin,
+      tglLahir: tanggalLahirController.text.trim().isNotEmpty
+          ? tanggalLahirController.text.trim()
+          : '01-01-1995',
+      avatarUrl: avatarUrl,
+      avatarBytes: fotoBytes,
+    );
+
+    PortofolioDataStore().adminProfile.value = updated;
+
+    // Perbarui foto_profil & data di tabel admin Supabase
+    try {
+      final supabase = StorageService.supabase;
+      final email = emailController.text.trim();
+      if (email.isNotEmpty) {
+        await supabase.from('admin').update({
+          'nama_admin': updated.nama,
+          if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
+        }).eq('email', email);
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Profil Admin berhasil disimpan!'),
@@ -124,6 +168,15 @@ class _ProfilAdminState extends State<ProfilAdmin> {
         duration: Duration(seconds: 2),
       ),
     );
+
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DashboardAdmin()),
+      );
+    }
   }
 
   @override

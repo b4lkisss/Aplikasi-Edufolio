@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../services/image_picker_service.dart';
+import '../../services/storage_service.dart';
+import '../../services/portofolio_service.dart';
+import '../../widgets/pilih_foto_dialog.dart';
 import 'portofolio_data.dart';
 import 'custom_date_picker_dialog.dart';
 
@@ -81,13 +84,16 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
   }
 
   Future<void> _pickFile() async {
-    final bytes = await AppImagePicker.pickImage();
-    if (bytes != null) {
-      setState(() {
-        selectedImageBytes = bytes;
-        uploadedFileName = 'bukti_portofolio_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      });
-    }
+    await PilihFotoDialog.pilihFotoResponsive(
+      context,
+      onFotoTerpilih: (bytes) {
+        setState(() {
+          selectedImageBytes = bytes;
+          uploadedFileName =
+              'bukti_portofolio_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        });
+      },
+    );
   }
 
   Future<void> _kirimPortofolio() async {
@@ -165,6 +171,19 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
     final dataStore = PortofolioDataStore();
     final profile = dataStore.profile.value;
 
+    // Upload foto portofolio ke bucket foto-portofolio di Supabase
+    String finalImageUrl =
+        'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80';
+    if (selectedImageBytes != null) {
+      final uploadedUrl = await StorageService.uploadFotoPortofolio(
+        selectedImageBytes!,
+        customName: 'porto_${DateTime.now().millisecondsSinceEpoch}',
+      );
+      if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
+        finalImageUrl = uploadedUrl;
+      }
+    }
+
     final newItem = PortofolioItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       judul: judulController.text.trim(),
@@ -178,16 +197,33 @@ class _TambahPortofolioSiswaState extends State<TambahPortofolioSiswa> {
       skills: skillsList,
       link: linkController.text.trim().isNotEmpty
           ? linkController.text.trim()
-          : 'https://drive.google.com/portofolio-edufolio',
+          : finalImageUrl,
       status: 'Menunggu',
       namaSiswa: profile.nama,
       kelas: profile.kelas,
-      imageUrl:
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+      imageUrl: finalImageUrl,
+      imageBytes: selectedImageBytes,
       tanggalUnggah: formattedDate,
     );
 
+    // Simpan ke local store agar langsung muncul di UI
     dataStore.addPortofolio(newItem);
+
+    // Kirim ke tabel database Supabase (portofolio_siswa & verifikasi)
+    try {
+      await PortofolioService.tambahPortofolio(
+        judul: judulController.text.trim(),
+        kategori: selectedKategori!,
+        deskripsi: deskripsiController.text.trim().isNotEmpty
+            ? deskripsiController.text.trim()
+            : 'Portofolio karya mandiri siswa dalam bidang ${selectedKategori!}.',
+        link: finalImageUrl,
+        tingkat: selectedTingkat,
+        peran: selectedPeran,
+        skills: skillsList,
+        tanggal: selectedDate!.toIso8601String().substring(0, 10),
+      );
+    } catch (_) {}
 
     if (!mounted) return;
     setState(() {

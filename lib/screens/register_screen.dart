@@ -18,6 +18,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // Controllers
   final TextEditingController namaController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController nisnController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController noTelponController = TextEditingController();
@@ -26,8 +27,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController confirmPasswordController = TextEditingController();
 
   // Dropdowns Siswa
-  String selectedKelas = 'X RPL A';
-  String selectedJurusan = 'RPL';
+  String? selectedKelas;
+  String? selectedJurusan;
   String selectedJenisKelamin = 'Laki-laki';
 
   bool isPasswordVisible = false;
@@ -64,6 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     namaController.dispose();
+    usernameController.dispose();
     nisnController.dispose();
     emailController.dispose();
     noTelponController.dispose();
@@ -75,6 +77,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (selectedJurusan == null || selectedJurusan!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan pilih Jurusan terlebih dahulu!'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (selectedKelas == null || selectedKelas!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan pilih Kelas terlebih dahulu!'),
+          backgroundColor: Colors.orange,
+        ),
+      );
       return;
     }
 
@@ -94,13 +116,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final res = await AuthService.registerSiswa(
       nama: namaController.text.trim(),
+      username: usernameController.text.trim(),
       nisn: nisnController.text.trim(),
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
       noTelepon: noTelponController.text.trim(),
       jenisKelamin: selectedJenisKelamin,
-      kelas: selectedKelas,
-      jurusan: selectedJurusan,
+      kelas: selectedKelas ?? '',
+      jurusan: selectedJurusan ?? '',
     );
 
     if (!mounted) return;
@@ -114,8 +137,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       dataStore.profile.value = SiswaProfile(
         nama: namaController.text.trim(),
         nisn: nisnController.text.trim(),
-        kelas: selectedKelas,
-        jurusan: selectedJurusan,
+        kelas: selectedKelas ?? '',
+        jurusan: selectedJurusan ?? '',
         email: emailController.text.trim(),
         noTelpon: noTelponController.text.trim(),
         jenisKelamin: selectedJenisKelamin,
@@ -189,6 +212,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 14),
 
+                // USERNAME
+                _buildTextField(
+                  label: 'Username',
+                  hint: 'Buat username unik',
+                  controller: usernameController,
+                  icon: Icons.alternate_email,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Username wajib diisi';
+                    if (v.trim().length < 3) return 'Username minimal 3 karakter';
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 14),
+
                 // NISN
                 _buildTextField(
                   label: 'NISN (Nomor Induk Siswa Nasional)',
@@ -228,6 +266,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(
                       child: _buildDropdownField(
                         label: 'Jurusan',
+                        hint: 'Pilih Jurusan',
                         value: selectedJurusan,
                         items: opsiJurusan,
                         onChanged: (val) {
@@ -240,6 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(
                       child: _buildDropdownField(
                         label: 'Kelas',
+                        hint: 'Pilih Kelas',
                         value: selectedKelas,
                         items: opsiKelas,
                         onChanged: (val) {
@@ -478,7 +518,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // WIDGET DROPDOWN FIELD
   Widget _buildDropdownField({
     required String label,
-    required String value,
+    String? hint,
+    required String? value,
     required List<String> items,
     required ValueChanged<String?> onChanged,
   }) {
@@ -505,6 +546,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
+              hint: hint != null
+                  ? Text(
+                      hint,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.grey.shade400,
+                      ),
+                    )
+                  : null,
               isExpanded: true,
               dropdownColor: Colors.white,
               icon: Icon(Icons.keyboard_arrow_down, color: primaryColor),

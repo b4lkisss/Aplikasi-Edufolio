@@ -22,99 +22,8 @@ class _DataGuruState extends State<DataGuru> {
   int currentPage = 1;
   final int itemsPerPage = 9;
 
-  // DATA CONTOH GURU
-  List<Map<String, dynamic>> daftarGuru = [
-    {
-      'nama': 'Balqis Demes Piscesa',
-      'bidang': 'Bahasa Inggris',
-      'email': 'balqis@gmail.com',
-      'nip': '1245543',
-      'telepon': '08819429283',
-      'gender': 'Perempuan',
-      'aktif': true,
-    },
-    {
-      'nama': 'Andi Ardiansyah',
-      'bidang': 'Bahasa Indonesia',
-      'email': 'andi@gmail.com',
-      'nip': '1245544',
-      'telepon': '081234567891',
-      'gender': 'Laki-laki',
-      'aktif': true,
-    },
-    {
-      'nama': 'Siti Aulia',
-      'bidang': 'KK',
-      'email': 'siti@gmail.com',
-      'nip': '1245545',
-      'telepon': '081234567892',
-      'gender': 'Perempuan',
-      'aktif': true,
-    },
-    {
-      'nama': 'Muhammad Rizky',
-      'bidang': 'Matematika',
-      'email': 'rizky@gmail.com',
-      'nip': '1245546',
-      'telepon': '081234567893',
-      'gender': 'Laki-laki',
-      'aktif': true,
-    },
-    {
-      'nama': 'Nadia Putri',
-      'bidang': 'Bahasa Jawa',
-      'email': 'nadia@gmail.com',
-      'nip': '1245547',
-      'telepon': '081234567894',
-      'gender': 'Perempuan',
-      'aktif': true,
-    },
-    {
-      'nama': 'Dimas Pratama',
-      'bidang': 'PKN',
-      'email': 'dimas@gmail.com',
-      'nip': '1245548',
-      'telepon': '081234567895',
-      'gender': 'Laki-laki',
-      'aktif': true,
-    },
-    {
-      'nama': 'Ayu Lestari',
-      'bidang': 'MPPKod',
-      'email': 'ayu@gmail.com',
-      'nip': '1245549',
-      'telepon': '081234567896',
-      'gender': 'Perempuan',
-      'aktif': true,
-    },
-    {
-      'nama': 'Fajar Ramadhan',
-      'bidang': 'P-Web',
-      'email': 'fajar@gmail.com',
-      'nip': '1245550',
-      'telepon': '081234567897',
-      'gender': 'Laki-laki',
-      'aktif': true,
-    },
-    {
-      'nama': 'Putri Amelia',
-      'bidang': 'Basis Data',
-      'email': 'putri@gmail.com',
-      'nip': '1245551',
-      'telepon': '081234567898',
-      'gender': 'Perempuan',
-      'aktif': true,
-    },
-    {
-      'nama': 'Rian Saputra',
-      'bidang': 'Matematika',
-      'email': 'rian@gmail.com',
-      'nip': '1245552',
-      'telepon': '081234567899',
-      'gender': 'Laki-laki',
-      'aktif': true,
-    },
-  ];
+  // DATA GURU DARI SUPABASE
+  List<Map<String, dynamic>> daftarGuru = [];
 
   final List<String> daftarBidang = [
     'Bahasa Inggris',
@@ -128,6 +37,8 @@ class _DataGuruState extends State<DataGuru> {
     'Basis Data',
   ];
 
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -136,8 +47,9 @@ class _DataGuruState extends State<DataGuru> {
 
   Future<void> _fetchGuruFromSupabase() async {
     final data = await MasterDataService.getDaftarGuru();
-    if (data.isNotEmpty && mounted) {
+    if (mounted) {
       setState(() {
+        isLoading = false;
         daftarGuru = data;
       });
     }

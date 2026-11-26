@@ -380,20 +380,25 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
               child: SizedBox(
                 width: 85,
                 height: 64,
-                child: item.imageUrl != null
-                    ? Image.network(
-                        item.imageUrl!,
+                child: item.imageBytes != null
+                    ? Image.memory(
+                        item.imageBytes!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Container(
-                          color: const Color(0xFFF1F5F9),
-                          child: const Icon(Icons.image_outlined, color: Colors.grey),
-                        ),
                       )
-                    : Container(
-                        color: const Color(0xFFF1F5F9),
-                        child: const Icon(Icons.image_outlined, color: Colors.grey),
-                      ),
+                    : (item.imageUrl != null
+                        ? Image.network(
+                            item.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              color: const Color(0xFFF1F5F9),
+                              child: const Icon(Icons.image_outlined, color: Colors.grey),
+                            ),
+                          )
+                        : Container(
+                            color: const Color(0xFFF1F5F9),
+                            child: const Icon(Icons.image_outlined, color: Colors.grey),
+                          )),
               ),
             ),
             const SizedBox(width: 14),
@@ -416,7 +421,7 @@ class _PortofolioSayaState extends State<PortofolioSaya> {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    item.kategori,
+                    '${item.kategori} • ${item.tanggalUnggah.isNotEmpty ? item.tanggalUnggah : item.tanggal}',
                     style: const TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,

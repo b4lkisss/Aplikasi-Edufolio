@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/master_data_service.dart';
+import '../../services/portofolio_service.dart';
 import '../../widgets/logout_dialog.dart';
 import 'profil_admin.dart';
 import 'data_siswa.dart';
@@ -26,6 +28,29 @@ class _DashboardAdminState extends State<DashboardAdmin> {
   int selectedMenu = 0;
   String selectedPeriod = 'This Month';
 
+  int totalSiswaCount = 0;
+  int totalGuruCount = 0;
+  bool isLoadingStats = false;
+
+  @override
+  void initState() {
+    super.initState();
+    dataStore.fetchFromSupabase();
+    _fetchCounts();
+  }
+
+  Future<void> _fetchCounts() async {
+    setState(() => isLoadingStats = true);
+    final siswaList = await MasterDataService.getDaftarSiswa();
+    final guruList = await MasterDataService.getDaftarGuru();
+    if (!mounted) return;
+    setState(() {
+      isLoadingStats = false;
+      totalSiswaCount = siswaList.length;
+      totalGuruCount = guruList.length;
+    });
+  }
+
   // MENU SIDEBAR (VERIFIKASI & AKTIVITAS TERBARU DIHAPUS)
   final List<Map<String, dynamic>> menuItems = [
     {'icon': Icons.home_rounded, 'title': 'Home'},
@@ -33,7 +58,6 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     {'icon': Icons.people_alt_rounded, 'title': 'Data Siswa'},
     {'icon': Icons.assignment_outlined, 'title': 'Kategori'},
     {'icon': Icons.bar_chart_rounded, 'title': 'Grafik'},
-    {'icon': Icons.notifications_rounded, 'title': 'Notification'},
     {'icon': Icons.person_rounded, 'title': 'My Profile'},
   ];
 
@@ -246,9 +270,16 @@ class _DashboardAdminState extends State<DashboardAdmin> {
               ValueListenableBuilder<List<PortofolioItem>>(
                 valueListenable: dataStore.portofolioList,
                 builder: (context, allItems, _) {
-                  final totalPorto = allItems.length;
-                  final totalPrestasi = allItems
-                      .where((i) => i.kategori.contains('Prestasi'))
+                  // Filter portofolio berdasarkan periode waktu terpilih
+                  final filteredItems = allItems.where((i) {
+                    final dt = MasterDataService.parseTanggalString(i.tanggalUnggah) ??
+                        MasterDataService.parseTanggalString(i.tanggal);
+                    return MasterDataService.matchFilterPeriode(dt, selectedPeriod);
+                  }).toList();
+
+                  final totalPorto = filteredItems.length;
+                  final totalPrestasi = filteredItems
+                      .where((i) => i.kategori.toLowerCase().contains('prestasi') || i.kategori.toLowerCase().contains('lomba'))
                       .length;
 
                   return GridView.count(
@@ -263,8 +294,9 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                       _buildStatCard(
                         Icons.school_rounded,
                         'Total Siswa',
-                        '32',
-                        const Color(0xFF4F46E5), // Indigo
+                        '$totalSiswaCount',
+                        const Color(0xFF5E48E8),
+                        cardBg: const Color(0xFFF0EDFF), // Lavender pastel
                         onTap: () {
                           Navigator.push(
                             context,
@@ -277,8 +309,9 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                       _buildStatCard(
                         Icons.people_alt_rounded,
                         'Total Guru',
-                        '30',
-                        const Color(0xFF0D9488), // Teal
+                        '$totalGuruCount',
+                        const Color(0xFF0D9488),
+                        cardBg: const Color(0xFFE5F6F3), // Mint pastel
                         onTap: () {
                           Navigator.push(
                             context,
@@ -293,7 +326,8 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                         Icons.folder_rounded,
                         'Portofolio',
                         '$totalPorto',
-                        const Color(0xFF2563EB), // Blue
+                        const Color(0xFF2563EB),
+                        cardBg: const Color(0xFFEAF1FF), // Baby blue
                         onTap: () {
                           Navigator.push(
                             context,
@@ -310,7 +344,8 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                         Icons.emoji_events_rounded,
                         'Prestasi',
                         '$totalPrestasi',
-                        const Color(0xFFFFA000), // Amber Gold
+                        const Color(0xFFD97706),
+                        cardBg: const Color(0xFFFFF3DF), // Cream pastel
                         onTap: () {
                           Navigator.push(
                             context,
@@ -359,100 +394,111 @@ class _DashboardAdminState extends State<DashboardAdmin> {
       child: Column(
         children: [
           // HEADER PROFIL DENGAN WARNA BIRU SESUAI ROLE SISWA
-          Container(
-            padding: const EdgeInsets.fromLTRB(18, 50, 10, 20),
-            color: primaryBlue,
-            child: Row(
-              children: [
-                // AVATAR & NAMA ADMIN BISA DIKLIK KE PROFIL
-                Expanded(
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () {
-                      Navigator.pop(context); // Tutup drawer
-                      Navigator.pushNamed(context, '/profil-admin');
-                    },
-                    child: Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x33000000),
-                                blurRadius: 6,
-                                offset: Offset(0, 2),
+          ValueListenableBuilder<AdminProfile>(
+            valueListenable: dataStore.adminProfile,
+            builder: (context, admin, _) {
+              return Container(
+                padding: const EdgeInsets.fromLTRB(18, 50, 10, 20),
+                color: primaryBlue,
+                child: Row(
+                  children: [
+                    // AVATAR & NAMA ADMIN BISA DIKLIK KE PROFIL
+                    Expanded(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          Navigator.pop(context); // Tutup drawer
+                          Navigator.pushNamed(context, '/profil-admin');
+                        },
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x33000000),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: const CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.white,
-                            child: Icon(
-                              Icons.person,
-                              size: 30,
-                              color: primaryBlue,
+                              child: CircleAvatar(
+                                radius: 24,
+                                backgroundColor: Colors.white,
+                                backgroundImage: admin.avatarBytes != null
+                                    ? MemoryImage(admin.avatarBytes!)
+                                        as ImageProvider
+                                    : null,
+                                child: admin.avatarBytes == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 30,
+                                        color: primaryBlue,
+                                      )
+                                    : null,
+                              ),
                             ),
-                          ),
-                        ),
 
-                        const SizedBox(width: 12),
+                            const SizedBox(width: 12),
 
-                        // NAMA DAN EMAIL ADMIN
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Admin Edufolio',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                            // NAMA DAN EMAIL ADMIN
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    admin.nama,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    admin.email,
+                                    style: const TextStyle(
+                                      color: Color(0xFFBAE6FD),
+                                      fontSize: 12,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 2),
-                              Text(
-                                'admin@edufolio.com',
-                                style: TextStyle(
-                                  color: Color(0xFFBAE6FD),
-                                  fontSize: 12,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
 
-                // TOMBOL CHEVRON / PANAH UNTUK MENUTUP SIDEBAR
-                InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () {
-                    Navigator.pop(context); // Tutup drawer
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Color(0x33FFFFFF),
-                      shape: BoxShape.circle,
+                    // TOMBOL CHEVRON / PANAH UNTUK MENUTUP SIDEBAR
+                    InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () {
+                        Navigator.pop(context); // Tutup drawer
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Color(0x33FFFFFF),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.chevron_left_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.chevron_left_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
 
           const SizedBox(height: 12),
@@ -504,15 +550,6 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => const GrafikStatistik(),
-                          ),
-                        );
-                      } else if (item['title'] == 'Notification' ||
-                          item['title'] == 'Notifikasi') {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const NotifikasiScreen(role: 'admin'),
                           ),
                         );
                       } else if (item['title'] == 'My Profile') {
@@ -616,28 +653,28 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     );
   }
 
-  // WIDGET KARTU STATISTIK
+  // WIDGET KARTU STATISTIK (SESUAI REKOMENDASI WARNA USER)
   Widget _buildStatCard(
     IconData icon,
     String title,
     String value,
     Color iconColor, {
+    Color? cardBg,
     VoidCallback? onTap,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+          color: cardBg ?? Colors.white,
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -645,35 +682,35 @@ class _DashboardAdminState extends State<DashboardAdmin> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // JUDUL DI PALING ATAS
+            // 1. JUDUL DI PALING ATAS
             Text(
               title,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 14.5,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E3A8A),
+                color: Color(0xFF1E293B),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
-            // ICON LEBIH BESARRRRR DI TENGAH (UKURAN 92)
+            // 2. ICON LEBIH BESAR DI TENGAH
             Expanded(
               child: Center(
                 child: Icon(
                   icon,
-                  size: 92,
+                  size: 78,
                   color: iconColor,
                 ),
               ),
             ),
-            // ANGKA DI PALING BAWAH
+            // 3. ANGKA DI PALING BAWAH
             Text(
               value,
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF64748B),
+                color: Color(0xFF0F172A),
               ),
             ),
           ],

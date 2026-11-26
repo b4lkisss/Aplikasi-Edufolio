@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/master_data_service.dart';
 import '../../widgets/logout_dialog.dart';
 import 'portofolio_data.dart';
 import 'profil_siswa.dart';
@@ -22,6 +23,12 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
 
   String selectedPeriod = 'This Month';
   final dataStore = PortofolioDataStore();
+
+  @override
+  void initState() {
+    super.initState();
+    dataStore.fetchFromSupabase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -200,10 +207,11 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                                 color: const Color(0xFFE2E8F0),
                                 width: 2,
                               ),
-                              image: const DecorationImage(
-                                image: NetworkImage(
-                                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-                                ),
+                              image: DecorationImage(
+                                image: profile.avatarBytes != null
+                                    ? MemoryImage(profile.avatarBytes!)
+                                        as ImageProvider
+                                    : NetworkImage(profile.avatarUrl),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -307,13 +315,21 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
               ValueListenableBuilder<List<PortofolioItem>>(
                 valueListenable: dataStore.portofolioList,
                 builder: (context, items, _) {
-                  final totalCount = items.length;
-                  final prestasiCount =
-                      items.where((e) => e.kategori == 'Prestasi & Lomba').length;
+                  // Filter berdasarkan periode waktu terpilih
+                  final filteredItems = items.where((i) {
+                    final dt = MasterDataService.parseTanggalString(i.tanggalUnggah) ??
+                        MasterDataService.parseTanggalString(i.tanggal);
+                    return MasterDataService.matchFilterPeriode(dt, selectedPeriod);
+                  }).toList();
+
+                  final totalCount = filteredItems.length;
+                  final prestasiCount = filteredItems
+                      .where((e) => e.kategori.toLowerCase().contains('prestasi') || e.kategori.toLowerCase().contains('lomba'))
+                      .length;
                   final sertifikatCount =
-                      items.where((e) => e.kategori == 'Sertifikat').length;
+                      filteredItems.where((e) => e.kategori.toLowerCase().contains('sertifikat')).length;
                   final organisasiCount =
-                      items.where((e) => e.kategori == 'Organisasi').length;
+                      filteredItems.where((e) => e.kategori.toLowerCase().contains('organisasi')).length;
 
                   return GridView.count(
                     crossAxisCount: 2,
@@ -327,30 +343,34 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                       _buildAdminStyleStatCard(
                         icon: Icons.folder_rounded,
                         title: 'Total Karya',
-                        value: '${totalCount > 0 ? totalCount : 15}',
+                        value: '$totalCount',
                         iconColor: const Color(0xFF2563EB),
+                        cardBg: const Color(0xFFEAF1FF), // Baby blue
                         onTap: () => _openPortofolioTab('Semua'),
                       ),
                       _buildAdminStyleStatCard(
                         icon: Icons.groups_rounded,
                         title: 'Organisasi',
-                        value: '${organisasiCount > 0 ? organisasiCount : 10}',
+                        value: '$organisasiCount',
                         iconColor: const Color(0xFF0D9488),
+                        cardBg: const Color(0xFFE5F6F3), // Mint pastel
                         onTap: () => _openPortofolioTab('Organisasi'),
                       ),
                       // BARIS 2: SERTIFIKAT & PRESTASI
                       _buildAdminStyleStatCard(
                         icon: Icons.description_rounded,
                         title: 'Sertifikat',
-                        value: '${sertifikatCount > 0 ? sertifikatCount : 5}',
-                        iconColor: const Color(0xFF4F46E5),
+                        value: '$sertifikatCount',
+                        iconColor: const Color(0xFF5E48E8),
+                        cardBg: const Color(0xFFF0EDFF), // Lavender pastel
                         onTap: () => _openPortofolioTab('Sertifikat'),
                       ),
                       _buildAdminStyleStatCard(
                         icon: Icons.emoji_events_rounded,
                         title: 'Prestasi',
-                        value: '${prestasiCount > 0 ? prestasiCount : 10}',
-                        iconColor: const Color(0xFFFFA000),
+                        value: '$prestasiCount',
+                        iconColor: const Color(0xFFD97706),
+                        cardBg: const Color(0xFFFFF3DF), // Cream pastel
                         onTap: () => _openPortofolioTab('Prestasi & Lomba'),
                       ),
                     ],
@@ -560,49 +580,6 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                 ),
               ),
 
-              const SizedBox(height: 10),
-
-              // TOMBOL "Download CV Portofolio (PDF)"
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Row(
-                          children: [
-                            Icon(Icons.check_circle, color: Colors.white),
-                            SizedBox(width: 10),
-                            Text('CV Portofolio (PDF) berhasil diunduh!'),
-                          ],
-                        ),
-                        backgroundColor: primaryBlue,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD9DFE5),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'Download CV Portofolio (PDF)',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: primaryBlue,
-                    ),
-                  ),
-                ),
-              ),
-
               const SizedBox(height: 16),
             ],
           ),
@@ -625,22 +602,22 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
     required String title,
     required String value,
     required Color iconColor,
+    required Color cardBg,
     required VoidCallback onTap,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+          color: cardBg,
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -648,35 +625,35 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // JUDUL DI PALING ATAS
+            // 1. JUDUL DI PALING ATAS
             Text(
               title,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 14.5,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E3A8A),
+                color: Color(0xFF1E293B),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
-            // ICON LEBIH BESARRRRR DI TENGAH (UKURAN 92)
+            // 2. ICON LEBIH BESAR DI TENGAH
             Expanded(
               child: Center(
                 child: Icon(
                   icon,
-                  size: 92,
+                  size: 78,
                   color: iconColor,
                 ),
               ),
             ),
-            // ANGKA DI PALING BAWAH
+            // 3. ANGKA DI PALING BAWAH
             Text(
               value,
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF64748B),
+                color: Color(0xFF0F172A),
               ),
             ),
           ],
@@ -707,10 +684,11 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
-                          image: const DecorationImage(
-                            image: NetworkImage(
-                              'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-                            ),
+                          image: DecorationImage(
+                            image: profile.avatarBytes != null
+                                ? MemoryImage(profile.avatarBytes!)
+                                    as ImageProvider
+                                : NetworkImage(profile.avatarUrl),
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -791,20 +769,6 @@ class _DashboardSiswaState extends State<DashboardSiswa> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const StatusVerifikasiSiswa(),
-                  ),
-                );
-              },
-            ),
-            _drawerItem(
-              icon: Icons.notifications_rounded,
-              title: 'Notifikasi',
-              isSelected: false,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotifikasiScreen(role: 'siswa'),
                   ),
                 );
               },

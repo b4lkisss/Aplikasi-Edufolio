@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../services/portofolio_service.dart';
 
@@ -13,6 +14,7 @@ class PortofolioItem {
   final String link;
   String status; // Disetujui, Menunggu, Ditolak
   final String? imageUrl;
+  final Uint8List? imageBytes;
   final String tanggalUnggah;
   final String namaSiswa;
   final String kelas;
@@ -35,6 +37,7 @@ class PortofolioItem {
     required this.link,
     this.status = 'Disetujui',
     this.imageUrl,
+    this.imageBytes,
     this.tanggalUnggah = '12 Apr 2025',
     this.namaSiswa = 'Balqis Demes Piscesa',
     this.kelas = 'XII RPL B',
@@ -90,17 +93,62 @@ class SiswaProfile {
   String noTelpon;
   String jenisKelamin;
   String avatarUrl;
+  Uint8List? avatarBytes;
 
   SiswaProfile({
-    this.nama = 'Balqis Demes Piscesa',
-    this.nisn = '0091750552',
-    this.kelas = 'XII RPL B',
-    this.jurusan = 'RPL',
-    this.email = 'balqis@gmail.com',
-    this.noTelpon = '08819437942',
-    this.jenisKelamin = 'Perempuan',
-    this.avatarUrl =
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    this.nama = '',
+    this.nisn = '',
+    this.kelas = '',
+    this.jurusan = '',
+    this.email = '',
+    this.noTelpon = '',
+    this.jenisKelamin = '',
+    this.avatarUrl = '',
+    this.avatarBytes,
+  });
+}
+
+class GuruProfile {
+  String nama;
+  String nip;
+  String bidang;
+  String email;
+  String tglLahir;
+  String noTelpon;
+  String jenisKelamin;
+  String avatarUrl;
+  Uint8List? avatarBytes;
+
+  GuruProfile({
+    this.nama = '',
+    this.nip = '',
+    this.bidang = '',
+    this.email = '',
+    this.tglLahir = '',
+    this.noTelpon = '',
+    this.jenisKelamin = '',
+    this.avatarUrl = '',
+    this.avatarBytes,
+  });
+}
+
+class AdminProfile {
+  String nama;
+  String email;
+  String noTelpon;
+  String jenisKelamin;
+  String tglLahir;
+  String avatarUrl;
+  Uint8List? avatarBytes;
+
+  AdminProfile({
+    this.nama = '',
+    this.email = '',
+    this.noTelpon = '',
+    this.jenisKelamin = '',
+    this.tglLahir = '',
+    this.avatarUrl = '',
+    this.avatarBytes,
   });
 }
 
@@ -134,222 +182,29 @@ class PortofolioDataStore {
   PortofolioDataStore._internal();
 
   final ValueNotifier<List<PortofolioItem>> portofolioList =
-      ValueNotifier<List<PortofolioItem>>([
-    PortofolioItem(
-      id: '1',
-      judul: 'Project Aplikasi E-Commerce Mobile',
-      kategori: 'Projek',
-      tingkat: 'Provinsi',
-      tanggal: '2025',
-      deskripsi:
-          'Mengembangkan aplikasi mobile e-commerce UMKM lokal menggunakan Flutter dan Firebase dengan fitur katalog produk, keranjang belanja, dan pembayaran payment gateway.',
-      peran: 'Lead Mobile Developer - Membangun arsitektur state management dan integrasi API payment gateway.',
-      skills: ['Flutter', 'Dart', 'Firebase', 'REST API', 'Figma'],
-      link: 'https://github.com/balqis/project-mobile-edufolio',
-      status: 'Menunggu',
-      imageUrl:
-          'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
-      tanggalUnggah: '2 Jam yang lalu',
-      namaSiswa: 'Balqis Demes Piscesa',
-      kelas: 'XII RPL B',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-    ),
-    PortofolioItem(
-      id: '2',
-      judul: 'Sistem Perpustakaan QR Scanner',
-      kategori: 'Projek',
-      tingkat: 'Kota',
-      tanggal: '2025',
-      deskripsi:
-          'Pembuatan sistem manajemen perpustakaan sekolah berbasis Android untuk mempermudah peminjaman dan pengembalian buku dengan QR Code scanner.',
-      peran: 'Frontend Developer - Desain antarmuka responsif dan implementasi scanner QR.',
-      skills: ['Flutter', 'QR Scanner', 'UI/UX'],
-      link: 'https://github.com/balqis/library-app',
-      status: 'Menunggu',
-      imageUrl:
-          'https://images.unsplash.com/photo-1579389083078-4e7018379f7e?auto=format&fit=crop&w=600&q=80',
-      tanggalUnggah: '3 Jam yang lalu',
-      namaSiswa: 'Karissa Zuleika',
-      kelas: 'XII RPL B',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80',
-    ),
-    PortofolioItem(
-      id: '3',
-      judul: 'Aplikasi Absensi GPS & Face Detection',
-      kategori: 'Projek',
-      tingkat: 'Sekolah',
-      tanggal: '2025',
-      deskripsi:
-          'Aplikasi monitoring kehadiran siswa berbasis lokasi GPS dan validasi wajah.',
-      peran: 'Mobile Developer & UI Designer.',
-      skills: ['Flutter', 'GPS Location', 'REST API'],
-      link: 'https://github.com/balqis/absensi-gps',
-      status: 'Menunggu',
-      imageUrl:
-          'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=600&q=80',
-      tanggalUnggah: '5 Jam yang lalu',
-      namaSiswa: 'Ahmad Fauzan',
-      kelas: 'XII RPL A',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-    ),
-    PortofolioItem(
-      id: '4',
-      judul: 'Sertifikat UI/UX Design Intermediate',
-      kategori: 'Sertifikat',
-      tingkat: 'Nasional',
-      tanggal: '2025',
-      deskripsi:
-          'Mengikuti pelatihan Web Design dan UI/UX selama 3 bulan di Digital School. Mempelajari desain antarmuka, wireframing, dan prototipe.',
-      peran: 'Peserta aktif pelatihan.',
-      skills: ['Figma', 'UI/UX Design', 'Design Thinking'],
-      link: 'https://drive.google.com/sertifikat-uiux',
-      status: 'Menunggu',
-      imageUrl:
-          'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80',
-      tanggalUnggah: '1 Hari yang lalu',
-      namaSiswa: 'Siti Rahmawati',
-      kelas: 'XI RPL A',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
-    ),
-    PortofolioItem(
-      id: '5',
-      judul: 'Juara 1 Lomba Web Design Provinsi',
-      kategori: 'Prestasi & Lomba',
-      tingkat: 'Provinsi',
-      tanggal: '2025',
-      deskripsi:
-          'Mengikuti lomba web design tingkat provinsi yang diselenggarakan oleh Dinas Pendidikan, merancang solusi portal edukasi digital interaktif.',
-      peran: 'Ketua Tim dan perancang utama UI/UX serta mengimplementasikan antarmuka dengan HTML, CSS, dan Dart.',
-      skills: ['Flutter Web', 'CSS', 'UI/UX Design', 'Figma'],
-      link: 'https://drive.google.com/sertifikat-web-design',
-      status: 'Disetujui',
-      imageUrl:
-          'https://images.unsplash.com/photo-1579389083078-4e7018379f7e?auto=format&fit=crop&w=600&q=80',
-      tanggalUnggah: '12 Apr 2025',
-      namaSiswa: 'Balqis Demes Piscesa',
-      kelas: 'XII RPL B',
-      kreativitas: 5,
-      kualitas: 5,
-      relevansi: 4,
-      dokumentasi: 4,
-      catatan: 'Karya sangat luar biasa dan rapi!',
-    ),
-    PortofolioItem(
-      id: '6',
-      judul: 'Sertifikat Flutter Developer Expert',
-      kategori: 'Sertifikat',
-      tingkat: 'Internasional',
-      tanggal: '2025',
-      deskripsi: 'Sertifikasi kompetensi keahlian Flutter dari Google Developer Groups.',
-      peran: 'Peserta Ujian Sertifikasi.',
-      skills: ['Flutter', 'State Management', 'Clean Architecture'],
-      link: 'https://cert.dev/flutter-expert',
-      status: 'Disetujui',
-      imageUrl:
-          'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80',
-      tanggalUnggah: '10 Feb 2025',
-      namaSiswa: 'Ahmad Fauzan',
-      kelas: 'XII RPL A',
-      kreativitas: 4,
-      kualitas: 5,
-      relevansi: 5,
-      dokumentasi: 4,
-    ),
-    PortofolioItem(
-      id: '7',
-      judul: 'Proposal UI/UX Aplikasi Edukasi',
-      kategori: 'Prestasi & Lomba',
-      tingkat: 'Sekolah',
-      tanggal: '2024',
-      deskripsi: 'Proposal desain antarmuka aplikasi edukasi interaktif untuk anak usia dini.',
-      peran: 'UI/UX Designer',
-      skills: ['Figma', 'Prototyping'],
-      link: 'https://figma.com/file/sample-edu',
-      status: 'Ditolak',
-      imageUrl:
-          'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?auto=format&fit=crop&w=600&q=80',
-      tanggalUnggah: '2 Hari yang lalu',
-      namaSiswa: 'Siti Rahmawati',
-      kelas: 'XI RPL A',
-      catatan: 'Perlu revisi pada bagian dokumentasi dan flowchart aplikasi.',
-    ),
-    PortofolioItem(
-      id: '8',
-      judul: 'Ketua Divisi IT OSIS Periode 2024',
-      kategori: 'Organisasi',
-      tingkat: 'Sekolah',
-      tanggal: '2024',
-      deskripsi:
-          'Bertanggung jawab dalam pengelolaan publikasi digital, sistem informasi, dan dokumentasi teknologi kegiatan kesiswaan.',
-      peran: 'Ketua Divisi IT',
-      skills: ['Kepemimpinan', 'Kerjasama Tim', 'IT Support', 'Manajemen Projek'],
-      link: 'https://drive.google.com/sk-osis',
-      status: 'Disetujui',
-      imageUrl:
-          'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80',
-      tanggalUnggah: '10 Jan 2025',
-      namaSiswa: 'Balqis Demes Piscesa',
-      kelas: 'XII RPL B',
-    ),
-  ]);
+      ValueNotifier<List<PortofolioItem>>([]);
 
   final ValueNotifier<SiswaProfile> profile =
       ValueNotifier<SiswaProfile>(SiswaProfile());
 
+  final ValueNotifier<GuruProfile> guruProfile =
+      ValueNotifier<GuruProfile>(GuruProfile());
+
+  final ValueNotifier<AdminProfile> adminProfile =
+      ValueNotifier<AdminProfile>(AdminProfile());
+
   // NOTIFIKASI TERSINKRONISASI
   final ValueNotifier<List<AppNotification>> notifications =
-      ValueNotifier<List<AppNotification>>([
-    AppNotification(
-      id: '1',
-      title: 'Pengajuan Baru Masuk',
-      message: 'Balqis Demes Piscesa mengajukan "Project Aplikasi E-Commerce Mobile".',
-      time: '2 Jam yang lalu',
-      role: 'guru',
-      icon: Icons.upload_file_rounded,
-      iconColor: const Color(0xFF254BD1),
-    ),
-    AppNotification(
-      id: '2',
-      title: 'Portofolio Disetujui',
-      message: 'Selamat! Portofolio "Juara 1 Lomba Web Design Provinsi" telah disetujui Guru.',
-      time: '1 Hari yang lalu',
-      role: 'siswa',
-      icon: Icons.check_circle_rounded,
-      iconColor: const Color(0xFF16A34A),
-    ),
-    AppNotification(
-      id: '3',
-      title: 'Perlu Revisi',
-      message: 'Portofolio "Proposal UI/UX Aplikasi Edukasi" ditolak. Catatan: Perlu perbaikan dokumentasi.',
-      time: '2 Hari yang lalu',
-      role: 'siswa',
-      icon: Icons.cancel_rounded,
-      iconColor: const Color(0xFFDC2626),
-    ),
-    AppNotification(
-      id: '4',
-      title: 'Pendaftaran Akun Baru',
-      message: 'Siswa baru Karissa Zuleika (XII RPL B) telah berhasil terdaftar ke sistem Edufolio.',
-      time: '3 Jam yang lalu',
-      role: 'admin',
-      icon: Icons.person_add_rounded,
-      iconColor: const Color(0xFF254BD1),
-    ),
-  ]);
+      ValueNotifier<List<AppNotification>>([]);
 
   // CRUD METODE PORTOFOLIO DENGAN SINKRONISASI SUPABASE
   Future<void> fetchFromSupabase() async {
     try {
       final supabaseItems = await PortofolioService.fetchAllPortofolio();
-      if (supabaseItems.isNotEmpty) {
-        portofolioList.value = supabaseItems;
-      }
+      // Selalu gunakan data dari Supabase (jika kosong di Supabase maka kosongkan list)
+      portofolioList.value = supabaseItems;
     } catch (e) {
-      // Jika offline, pertahankan data lokal
+      // Jika error / offline
     }
   }
 

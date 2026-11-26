@@ -1,8 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../services/image_picker_service.dart';
+import '../../services/storage_service.dart';
 import '../../widgets/pilih_foto_dialog.dart';
 import '../siswa/custom_date_picker_dialog.dart';
+import '../siswa/portofolio_data.dart';
+import 'dashboard_guru.dart';
 
 class ProfilGuru extends StatefulWidget {
   const ProfilGuru({super.key});
@@ -32,6 +35,20 @@ class _ProfilGuruState extends State<ProfilGuru> {
   final Color fieldBg = const Color(0xFFD9D9D9);
 
   @override
+  void initState() {
+    super.initState();
+    final guru = PortofolioDataStore().guruProfile.value;
+    selectedImageBytes = guru.avatarBytes;
+    namaController.text = guru.nama;
+    nipController.text = guru.nip;
+    bidangController.text = guru.bidang;
+    emailController.text = guru.email;
+    tglLahirController.text = guru.tglLahir;
+    noTelponController.text = guru.noTelpon;
+    selectedGender = guru.jenisKelamin;
+  }
+
+  @override
   void dispose() {
     namaController.dispose();
     nipController.dispose();
@@ -43,23 +60,12 @@ class _ProfilGuruState extends State<ProfilGuru> {
   }
 
   Future<void> _pickAvatar() async {
-    PilihFotoDialog.show(
+    await PilihFotoDialog.pilihFotoResponsive(
       context,
-      onKamera: () async {
-        final bytes = await AppImagePicker.pickImage();
-        if (bytes != null) {
-          setState(() {
-            selectedImageBytes = bytes;
-          });
-        }
-      },
-      onFile: () async {
-        final bytes = await AppImagePicker.pickImage();
-        if (bytes != null) {
-          setState(() {
-            selectedImageBytes = bytes;
-          });
-        }
+      onFotoTerpilih: (bytes) {
+        setState(() {
+          selectedImageBytes = bytes;
+        });
       },
     );
   }
@@ -93,7 +99,60 @@ class _ProfilGuruState extends State<ProfilGuru> {
     }
   }
 
-  void _simpanProfil() {
+  Future<void> _simpanProfil() async {
+    String avatarUrl = PortofolioDataStore().guruProfile.value.avatarUrl;
+
+    if (selectedImageBytes != null) {
+      final uploadedUrl = await StorageService.uploadFotoProfil(
+        selectedImageBytes!,
+        role: 'guru',
+      );
+      if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
+        avatarUrl = uploadedUrl;
+      }
+    }
+
+    final updated = GuruProfile(
+      nama: namaController.text.trim().isNotEmpty
+          ? namaController.text.trim()
+          : 'Balqis Demes Piscesa',
+      nip: nipController.text.trim().isNotEmpty
+          ? nipController.text.trim()
+          : '1625891829',
+      bidang: bidangController.text.trim().isNotEmpty
+          ? bidangController.text.trim()
+          : 'Bahasa Inggris',
+      email: emailController.text.trim().isNotEmpty
+          ? emailController.text.trim()
+          : 'ardiiz@gmail.com',
+      tglLahir: tglLahirController.text.trim().isNotEmpty
+          ? tglLahirController.text.trim()
+          : '14-02-2008',
+      noTelpon: noTelponController.text.trim().isNotEmpty
+          ? noTelponController.text.trim()
+          : '083930865308943',
+      jenisKelamin: selectedGender,
+      avatarUrl: avatarUrl,
+      avatarBytes: selectedImageBytes,
+    );
+
+    PortofolioDataStore().guruProfile.value = updated;
+
+    // Perbarui foto_profil & data di tabel guru Supabase
+    try {
+      final supabase = StorageService.supabase;
+      final email = emailController.text.trim();
+      final nip = nipController.text.trim();
+      if (email.isNotEmpty || nip.isNotEmpty) {
+        await supabase.from('guru').update({
+          'nama_guru': updated.nama,
+          'bidang_mengajar': updated.bidang,
+          if (avatarUrl.startsWith('http')) 'foto_profil': avatarUrl,
+        }).or('email.eq.$email,nip.eq.$nip');
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Row(
@@ -108,6 +167,15 @@ class _ProfilGuruState extends State<ProfilGuru> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
+
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DashboardGuru()),
+      );
+    }
   }
 
   @override

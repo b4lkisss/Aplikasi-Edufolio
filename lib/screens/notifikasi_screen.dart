@@ -40,15 +40,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF1E293B)),
             onSelected: (value) {
-              if (value == 'read_all') {
-                dataStore.markAllNotificationsAsRead(widget.role);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Semua notifikasi ditandai telah dibaca'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              } else if (value == 'clear_all') {
+              if (value == 'clear_all') {
                 dataStore.clearAllNotifications(widget.role);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -59,16 +51,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'read_all',
-                child: Row(
-                  children: [
-                    Icon(Icons.done_all_rounded, size: 18, color: primaryBlue),
-                    SizedBox(width: 8),
-                    Text('Tandai Semua Dibaca'),
-                  ],
-                ),
-              ),
               const PopupMenuItem(
                 value: 'clear_all',
                 child: Row(

@@ -57,26 +57,31 @@ class DetailPortofolioSiswa extends StatelessWidget {
                   height: 190,
                   width: double.infinity,
                   color: const Color(0xFFE2E8F0),
-                  child: portofolio.imageUrl != null
-                      ? Image.network(
-                          portofolio.imageUrl!,
+                  child: portofolio.imageBytes != null
+                      ? Image.memory(
+                          portofolio.imageBytes!,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Center(
-                            child: Icon(
-                              Icons.image_outlined,
-                              size: 48,
-                              color: Colors.grey,
-                            ),
-                          ),
                         )
-                      : const Center(
-                          child: Icon(
-                            Icons.image_outlined,
-                            size: 48,
-                            color: Colors.grey,
-                          ),
-                        ),
+                      : (portofolio.imageUrl != null
+                          ? Image.network(
+                              portofolio.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Center(
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            )
+                          : const Center(
+                              child: Icon(
+                                Icons.image_outlined,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                            )),
                 ),
               ),
 
