@@ -1,6 +1,6 @@
 {
-    "name": "aplikasi_edufolio",
-    "short_name": "aplikasi_edufolio",
+    "name": "Edufolio",
+    "short_name": "Edufolio",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
