@@ -219,7 +219,91 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
+
+              // GREETING DAN AVATAR ADMIN (PERSIS SEPERTI DASHBOARD SISWA)
+              ValueListenableBuilder<AdminProfile>(
+                valueListenable: dataStore.adminProfile,
+                builder: (context, admin, _) {
+                  final namaTampil =
+                      admin.nama.isNotEmpty ? admin.nama : 'Administrator';
+                  final emailTampil =
+                      admin.email.isNotEmpty ? admin.email : 'admin@edufolio.com';
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilAdmin(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          // AVATAR ADMIN
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                                width: 2,
+                              ),
+                              image: DecorationImage(
+                                image: PortofolioItem.getAvatarImageProvider(
+                                  admin.avatarBytes,
+                                  admin.avatarUrl,
+                                ),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Halo, $namaTampil',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryBlue,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Administrator • $emailTampil',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 14),
 
               // BANNER SAPAAN ADMIN
               Container(

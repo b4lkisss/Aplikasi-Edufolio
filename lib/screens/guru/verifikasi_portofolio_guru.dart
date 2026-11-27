@@ -478,85 +478,87 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
             ),
           ),
 
-          const SizedBox(height: 12),
+          if (item.status == 'Menunggu') ...[
+            const SizedBox(height: 12),
 
-          // TOMBOL AKSI: SETUJU & TOLAK
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // TOMBOL SETUJU (HIJAU)
-              InkWell(
-                onTap: () => _updateStatus(item.id, 'Disetujui'),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: successGreen,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x2416A34A),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.check_box_rounded, size: 15, color: Colors.white),
-                      SizedBox(width: 6),
-                      Text(
-                        'Setuju',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+            // TOMBOL AKSI: SETUJU & TOLAK (HANYA MUNCUL JIKA STATUS MASIH MENUNGGU)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // TOMBOL SETUJU (HIJAU)
+                InkWell(
+                  onTap: () => _updateStatus(item.id, 'Disetujui'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: successGreen,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x2416A34A),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_box_rounded, size: 15, color: Colors.white),
+                        SizedBox(width: 6),
+                        Text(
+                          'Setuju',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
 
-              // TOMBOL TOLAK (MERAH)
-              InkWell(
-                onTap: () => _updateStatus(item.id, 'Ditolak'),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: dangerRed,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x24DC2626),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.disabled_by_default_rounded, size: 15, color: Colors.white),
-                      SizedBox(width: 6),
-                      Text(
-                        'Tolak',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                // TOMBOL TOLAK (MERAH)
+                InkWell(
+                  onTap: () => _updateStatus(item.id, 'Ditolak'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: dangerRed,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x24DC2626),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.disabled_by_default_rounded, size: 15, color: Colors.white),
+                        SizedBox(width: 6),
+                        Text(
+                          'Tolak',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
       ),
     );

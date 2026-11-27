@@ -706,74 +706,76 @@ class _DetailPortofolioGuruState extends State<DetailPortofolioGuru> {
               ),
             ),
 
-            const SizedBox(height: 12),
+            if (currentStatus == 'Menunggu') ...[
+              const SizedBox(height: 12),
 
-            // ROW 2: DUA TOMBOL BERDAMPINGAN: SETUJUI (HIJAU) & TOLAK (MERAH)
-            Row(
-              children: [
-                // SETUJUI
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _konfirmasiAksi(true),
-                      icon: const Icon(
-                        Icons.assignment_turned_in_outlined,
-                        size: 20,
-                        color: Colors.white,
-                      ),
-                      label: const Text(
-                        'Setujui',
-                        style: TextStyle(
+              // ROW 2: DUA TOMBOL BERDAMPINGAN: SETUJUI (HIJAU) & TOLAK (MERAH) — HANYA MUNCUL JIKA MASIH MENUNGGU
+              Row(
+                children: [
+                  // SETUJUI
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _konfirmasiAksi(true),
+                        icon: const Icon(
+                          Icons.assignment_turned_in_outlined,
+                          size: 20,
                           color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF22C55E),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        label: const Text(
+                          'Setujui',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF22C55E),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
 
-                const SizedBox(width: 12),
+                  const SizedBox(width: 12),
 
-                // TOLAK
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _konfirmasiAksi(false),
-                      icon: const Icon(
-                        Icons.disabled_by_default_outlined,
-                        size: 20,
-                        color: Colors.white,
-                      ),
-                      label: const Text(
-                        'Tolak',
-                        style: TextStyle(
+                  // TOLAK
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _konfirmasiAksi(false),
+                        icon: const Icon(
+                          Icons.disabled_by_default_outlined,
+                          size: 20,
                           color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF4444),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        label: const Text(
+                          'Tolak',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEF4444),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

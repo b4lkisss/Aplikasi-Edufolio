@@ -46,6 +46,7 @@ class _DashboardGuruState extends State<DashboardGuru> {
   final List<Map<String, dynamic>> menuItems = [
     {'icon': Icons.grid_view_rounded, 'title': 'Dashboard'},
     {'icon': Icons.group_rounded, 'title': 'Data Siswa'},
+    {'icon': Icons.folder_rounded, 'title': 'Portofolio'},
     {'icon': Icons.assignment_turned_in_rounded, 'title': 'Verifikasi Portofolio'},
     {'icon': Icons.bar_chart_rounded, 'title': 'Grafik'},
     {'icon': Icons.person_rounded, 'title': 'Profil Guru'},
@@ -203,7 +204,87 @@ class _DashboardGuruState extends State<DashboardGuru> {
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
+
+              // GREETING DAN AVATAR GURU (PERSIS SEPERTI DASHBOARD SISWA)
+              ValueListenableBuilder<GuruProfile>(
+                valueListenable: dataStore.guruProfile,
+                builder: (context, guru, _) {
+                  final namaTampil = guru.nama.isNotEmpty ? guru.nama : 'Guru Edufolio';
+                  final bidangTampil = guru.bidang.isNotEmpty ? guru.bidang : 'Guru Pengajar';
+                  final nipTampil = guru.nip.isNotEmpty ? guru.nip : '-';
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilGuru(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          // AVATAR GURU
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                                width: 2,
+                              ),
+                              image: DecorationImage(
+                                image: PortofolioItem.getAvatarImageProvider(
+                                  guru.avatarBytes,
+                                  guru.avatarUrl,
+                                ),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Halo, $namaTampil',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryBlue,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  '$bidangTampil , NIP $nipTampil',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 14),
 
               // BANNER SAPAAN GURU
               ValueListenableBuilder<GuruProfile>(
@@ -228,29 +309,20 @@ class _DashboardGuruState extends State<DashboardGuru> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Halo, $namaTampil',
+                          'Selamat datang, $namaTampil 👋',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Text(
-                          'Selamat datang, $namaTampil 👋',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
                         const Text(
                           'Kelola dan pantau data portofolio siswa dengan mudah.',
                           style: TextStyle(
                             color: Color(0xE6FFFFFF),
                             fontSize: 12,
-                            height: 1.3,
+                            height: 1.35,
                           ),
                         ),
                       ],
@@ -779,6 +851,16 @@ class _DashboardGuruState extends State<DashboardGuru> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => const DataSiswaGuru(),
+                            ),
+                          );
+                        } else if (title == 'Portofolio') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PortofolioSaya(
+                                title: 'Seluruh Portofolio',
+                                initialKategori: 'Semua',
+                              ),
                             ),
                           );
                         } else if (title == 'Verifikasi Portofolio') {
