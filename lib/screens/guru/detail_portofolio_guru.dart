@@ -371,12 +371,18 @@ class _DetailPortofolioGuruState extends State<DetailPortofolioGuru> {
         widget.portofolio['kategori'] ?? 'Prestasi & Lomba • 2024';
     final String deskripsi = widget.portofolio['deskripsi'] ??
         'Memenangkan juara 1 dalam kompetisi pembuatan website interaktif bertema edukasi digital tingkat provinsi Jawa Barat yang diselenggarakan oleh Dinas Pendidikan.';
-    final String peran = widget.portofolio['peran'] ??
-        'Frontend Developer - Bertanggung jawab atas desain tampilan (UI/UX) dan implementasi antarmuka web menggunakan Flutter Web.';
+    final String peran = widget.portofolio['peran'] ?? '';
     final List<String> skills = (widget.portofolio['skills'] as List<dynamic>?)
             ?.map((e) => e.toString())
+            .where((s) => s.isNotEmpty)
             .toList() ??
-        ['Flutter', 'Dart', 'Figma', 'REST API', 'Git'];
+        (widget.portofolio['skills'] is String
+            ? (widget.portofolio['skills'] as String)
+                .split(',')
+                .map((s) => s.trim())
+                .where((s) => s.isNotEmpty)
+                .toList()
+            : []);
     final String link = widget.portofolio['link'] ??
         'https://github.com/balqis/project-web-edufolio';
     final String namaSiswa =
@@ -588,45 +594,47 @@ class _DetailPortofolioGuruState extends State<DetailPortofolioGuru> {
 
             const SizedBox(height: 16),
 
-            // PERAN SAYA
-            _buildSectionHeader('Peran Saya'),
-            Text(
-              peran,
-              style: const TextStyle(
-                fontSize: 13,
-                height: 1.5,
-                color: Color(0xFF334155),
+            // PERAN
+            if (peran.isNotEmpty) ...[
+              _buildSectionHeader('Peran'),
+              Text(
+                peran,
+                style: const TextStyle(
+                  fontSize: 13,
+                  height: 1.5,
+                  color: Color(0xFF334155),
+                ),
               ),
-            ),
+              const SizedBox(height: 16),
+            ],
 
-            const SizedBox(height: 16),
-
-            // SKILL YANG TERLIBAT
-            _buildSectionHeader('Skill yang Terlibat'),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: skills.map((skill) {
-                return Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    skill,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E293B),
+            // SKILL
+            if (skills.isNotEmpty) ...[
+              _buildSectionHeader('Skill'),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: skills.map((skill) {
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                  ),
-                );
-              }).toList(),
-            ),
-
-            const SizedBox(height: 16),
+                    child: Text(
+                      skill,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // LINK PENDUKUNG
             _buildSectionHeader('Link Pendukung'),

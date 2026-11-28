@@ -80,15 +80,32 @@ class PortofolioService {
       }
 
       // A. Insert ke tabel portofolio_siswa
-      final portoResponse = await supabase.from('portofolio_siswa').insert({
-        'id_siswa': idSiswa,
-        'id_kategori': idKategori,
-        'judul_portofolio': judul,
-        'deskripsi': deskripsi,
-        'tanggal_portofolio': tglFormatted,
-        'link_pendukung': link,
-        'file_pendukung': fileUrl ?? link,
-      }).select().single();
+      Map<String, dynamic> portoResponse;
+      try {
+        // Coba insert dengan kolom peran & skills (jika sudah ada di DB)
+        portoResponse = await supabase.from('portofolio_siswa').insert({
+          'id_siswa': idSiswa,
+          'id_kategori': idKategori,
+          'judul_portofolio': judul,
+          'deskripsi': deskripsi,
+          'tanggal_portofolio': tglFormatted,
+          'link_pendukung': link,
+          'file_pendukung': fileUrl ?? link,
+          'peran': peran ?? 'Kontributor Utama',
+          'skills': (skills != null && skills.isNotEmpty) ? skills.join(',') : '',
+        }).select().single();
+      } catch (_) {
+        // Fallback: insert tanpa kolom peran & skills (kolom belum ditambahkan di DB)
+        portoResponse = await supabase.from('portofolio_siswa').insert({
+          'id_siswa': idSiswa,
+          'id_kategori': idKategori,
+          'judul_portofolio': judul,
+          'deskripsi': deskripsi,
+          'tanggal_portofolio': tglFormatted,
+          'link_pendukung': link,
+          'file_pendukung': fileUrl ?? link,
+        }).select().single();
+      }
 
       final idPortofolio = portoResponse['id_portofolio'];
 
@@ -119,6 +136,8 @@ class PortofolioService {
         tanggal_portofolio,
         link_pendukung,
         file_pendukung,
+        peran,
+        skills,
         siswa:id_siswa (id_siswa, nama_siswa, kelas, nisn),
         kategori:id_kategori (id_kategori, nama_kategori),
         verifikasi (id_verifikasi, status_verifikasi, catatan),
@@ -187,14 +206,21 @@ class PortofolioService {
                 ? link
                 : 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80');
 
+        // Peran & Skills dari Supabase (kolom baru), fallback ke kosong jika belum ada
+        final String peranDb = row['peran']?.toString() ?? '';
+        final String skillsRaw = row['skills']?.toString() ?? '';
+        final List<String> skillsDb = skillsRaw.isNotEmpty
+            ? skillsRaw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList()
+            : [];
+
         items.add(PortofolioItem(
           id: id,
           judul: judul,
           kategori: namaKategori,
           deskripsi: deskripsi,
           tanggal: tgl,
-          peran: 'Kontributor Utama',
-          skills: ['Flutter', 'Desain', 'Kreativitas'],
+          peran: peranDb,
+          skills: skillsDb,
           link: link,
           status: status,
           namaSiswa: namaSiswa,

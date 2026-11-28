@@ -18,6 +18,12 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
   final PortofolioDataStore dataStore = PortofolioDataStore();
 
   @override
+  void initState() {
+    super.initState();
+    dataStore.fetchFromSupabase();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -65,53 +71,66 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           ),
         ],
       ),
-      body: ValueListenableBuilder<List<AppNotification>>(
-        valueListenable: dataStore.notifications,
-        builder: (context, notifs, _) {
-          final list = notifs.where((n) {
-            if (widget.role == 'all') return true;
-            return n.role == 'all' || n.role == widget.role;
-          }).toList();
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await dataStore.fetchFromSupabase();
+        },
+        color: primaryBlue,
+        child: ValueListenableBuilder<List<AppNotification>>(
+          valueListenable: dataStore.notifications,
+          builder: (context, notifs, _) {
+            final list = notifs.where((n) {
+              if (widget.role == 'all') return true;
+              return n.role == 'all' || n.role == widget.role;
+            }).toList();
 
-          if (list.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            if (list.isEmpty) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.notifications_off_outlined,
-                      size: 48,
-                      color: primaryBlue,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Tidak Ada Notifikasi',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Semua aktivitas terbaru akan muncul di sini secara otomatis.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: Color(0xFF64748B),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEFF6FF),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.notifications_off_outlined,
+                              size: 48,
+                              color: primaryBlue,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Tidak Ada Notifikasi',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Semua aktivitas terbaru akan muncul di sini secara otomatis.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
-              ),
-            );
-          }
+              );
+            }
 
           return ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -307,6 +326,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }

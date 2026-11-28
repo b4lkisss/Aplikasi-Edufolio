@@ -22,6 +22,8 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
   int selectedTab = 0; // 0: Menunggu, 1: Disetujui, 2: Ditolak
   String selectedKategori = 'Kategori';
   String selectedSort = 'Terbaru'; // 'Terbaru' atau 'Terlama'
+  int currentPage = 1;
+  final int itemsPerPage = 5;
 
   final List<String> kategoriList = [
     'Kategori',
@@ -94,6 +96,17 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
         if (selectedSort == 'Terlama') {
           filteredList = filteredList.reversed.toList();
         }
+
+        // Kalkulasi Pagination
+        final int totalItems = filteredList.length;
+        final int totalPages = (totalItems / itemsPerPage).ceil();
+        final int safePage = totalPages == 0 ? 1 : currentPage.clamp(1, totalPages);
+        final int startIndex = (safePage - 1) * itemsPerPage;
+        final int endIndex = (startIndex + itemsPerPage > totalItems)
+            ? totalItems
+            : startIndex + itemsPerPage;
+        final List<PortofolioItem> paginatedList =
+            totalItems > 0 ? filteredList.sublist(startIndex, endIndex) : [];
 
         return Scaffold(
           backgroundColor: const Color(0xFFF8FAFC),
@@ -175,7 +188,9 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
                         alignment: Alignment.center,
                         child: TextField(
                           controller: searchController,
-                          onChanged: (_) => setState(() {}),
+                          onChanged: (_) => setState(() {
+                            currentPage = 1;
+                          }),
                           style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
                           decoration: InputDecoration(
                             icon: const Icon(Icons.search_rounded, color: primaryBlue, size: 20),
@@ -192,6 +207,7 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
                                     onPressed: () {
                                       setState(() {
                                         searchController.clear();
+                                        currentPage = 1;
                                       });
                                     },
                                   )
@@ -243,6 +259,7 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
                                     if (val != null) {
                                       setState(() {
                                         selectedKategori = val;
+                                        currentPage = 1;
                                       });
                                     }
                                   },
@@ -280,8 +297,112 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
                             ),
                           ),
                         )
-                      else
-                        ...filteredList.map((item) => _buildSubmissionCard(item)),
+                      else ...[
+                        ...paginatedList.map((item) => _buildSubmissionCard(item)),
+
+                        // KONTROL PAGINATION
+                        if (totalPages > 1) ...[
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Tombol Prev
+                                IconButton(
+                                  onPressed: safePage > 1
+                                      ? () {
+                                          setState(() {
+                                            currentPage = safePage - 1;
+                                          });
+                                        }
+                                      : null,
+                                  icon: const Icon(Icons.chevron_left_rounded),
+                                  color: primaryBlue,
+                                  iconSize: 22,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                ),
+                                const SizedBox(width: 4),
+
+                                // Tombol Angka Halaman
+                                ...List.generate(totalPages, (index) {
+                                  final pageNumber = index + 1;
+                                  final isCurrent = safePage == pageNumber;
+
+                                  return InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        currentPage = pageNumber;
+                                      });
+                                    },
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      width: 32,
+                                      height: 32,
+                                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: isCurrent ? primaryBlue : Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: isCurrent ? primaryBlue : const Color(0xFFCBD5E1),
+                                          width: 1.2,
+                                        ),
+                                        boxShadow: isCurrent
+                                            ? [
+                                                const BoxShadow(
+                                                  color: Color(0x33254BD1),
+                                                  blurRadius: 4,
+                                                  offset: Offset(0, 2),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: Text(
+                                        '$pageNumber',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: isCurrent ? Colors.white : const Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(width: 4),
+
+                                // Tombol Next
+                                IconButton(
+                                  onPressed: safePage < totalPages
+                                      ? () {
+                                          setState(() {
+                                            currentPage = safePage + 1;
+                                          });
+                                        }
+                                      : null,
+                                  icon: const Icon(Icons.chevron_right_rounded),
+                                  color: primaryBlue,
+                                  iconSize: 22,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              'Menampilkan ${startIndex + 1}-${endIndex} dari $totalItems portofolio',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                      ],
                     ],
                   ),
                 ),
@@ -301,6 +422,7 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
         onTap: () {
           setState(() {
             selectedTab = index;
+            currentPage = 1;
           });
         },
         borderRadius: BorderRadius.circular(12),
@@ -572,6 +694,7 @@ class _VerifikasiPortofolioGuruState extends State<VerifikasiPortofolioGuru> {
         if (selectedSort != label) {
           setState(() {
             selectedSort = label;
+            currentPage = 1;
           });
         }
       },

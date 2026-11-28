@@ -46,8 +46,8 @@ class PortofolioItem {
     this.tingkat = 'Provinsi',
     required this.tanggal,
     required this.deskripsi,
-    required this.peran,
-    required this.skills,
+    this.peran = '',
+    List<String>? skills,
     required this.link,
     this.status = 'Disetujui',
     this.imageUrl,
@@ -62,7 +62,7 @@ class PortofolioItem {
     this.relevansi,
     this.dokumentasi,
     this.idSiswa,
-  });
+  }) : skills = skills ?? [];
 
   Map<String, dynamic> toMap() {
     return {
@@ -209,46 +209,9 @@ class PortofolioDataStore {
   final ValueNotifier<AdminProfile> adminProfile =
       ValueNotifier<AdminProfile>(AdminProfile());
 
-  // NOTIFIKASI TERSINKRONISASI
+  // NOTIFIKASI TERSINKRONISASI (BERSIH DARI DATA DUMMY)
   final ValueNotifier<List<AppNotification>> notifications =
-      ValueNotifier<List<AppNotification>>([
-    AppNotification(
-      id: '1',
-      title: 'Pengajuan Baru Masuk',
-      message: 'Balqis Demes Piscesa mengajukan "Project Aplikasi E-Commerce Mobile".',
-      time: '2 Jam yang lalu',
-      role: 'guru',
-      icon: Icons.upload_file_rounded,
-      iconColor: const Color(0xFF254BD1),
-    ),
-    AppNotification(
-      id: '2',
-      title: 'Portofolio Disetujui',
-      message: 'Selamat! Portofolio "Juara 1 Lomba Web Design Provinsi" telah disetujui Guru.',
-      time: '1 Hari yang lalu',
-      role: 'siswa',
-      icon: Icons.check_circle_rounded,
-      iconColor: const Color(0xFF16A34A),
-    ),
-    AppNotification(
-      id: '3',
-      title: 'Perlu Revisi',
-      message: 'Portofolio "Proposal UI/UX Aplikasi Edukasi" ditolak. Catatan: Perlu perbaikan dokumentasi.',
-      time: '2 Hari yang lalu',
-      role: 'siswa',
-      icon: Icons.cancel_rounded,
-      iconColor: const Color(0xFFDC2626),
-    ),
-    AppNotification(
-      id: '4',
-      title: 'Pendaftaran Akun Baru',
-      message: 'Siswa baru Karissa Zuleika (XII RPL B) telah berhasil terdaftar ke sistem Edufolio.',
-      time: '3 Jam yang lalu',
-      role: 'admin',
-      icon: Icons.person_add_rounded,
-      iconColor: const Color(0xFF254BD1),
-    ),
-  ]);
+      ValueNotifier<List<AppNotification>>([]);
 
   // CRUD METODE PORTOFOLIO DENGAN SINKRONISASI SUPABASE
   Future<void> fetchFromSupabase() async {
@@ -256,9 +219,57 @@ class PortofolioDataStore {
       final supabaseItems = await PortofolioService.fetchAllPortofolio();
       // Selalu gunakan data dari Supabase (jika kosong di Supabase maka kosongkan list)
       portofolioList.value = supabaseItems;
+      syncNotificationsFromPortofolio(supabaseItems);
     } catch (e) {
       // Jika error / offline
     }
+  }
+
+  // SINKRONKAN NOTIFIKASI OTOMATIS DARI DATA PORTOFOLIO NYATA DI SUPABASE
+  void syncNotificationsFromPortofolio(List<PortofolioItem> items) {
+    final List<AppNotification> realNotifs = [];
+
+    for (var item in items) {
+      // 1. Notifikasi untuk Guru & Admin: Pengajuan Portofolio Siswa
+      if (item.status == 'Menunggu') {
+        realNotifs.add(AppNotification(
+          id: 'submit_${item.id}',
+          title: 'Pengajuan Baru Masuk',
+          message: '${item.namaSiswa} mengajukan portofolio "${item.judul}".',
+          time: item.tanggalUnggah,
+          role: 'guru',
+          icon: Icons.upload_file_rounded,
+          iconColor: const Color(0xFF254BD1),
+        ));
+      } else if (item.status == 'Disetujui') {
+        // 2. Notifikasi untuk Siswa: Disetujui
+        realNotifs.add(AppNotification(
+          id: 'approved_${item.id}',
+          title: 'Portofolio Disetujui',
+          message: 'Selamat! Portofolio "${item.judul}" telah disetujui Guru.',
+          time: item.tanggalUnggah,
+          role: 'siswa',
+          icon: Icons.check_circle_rounded,
+          iconColor: const Color(0xFF16A34A),
+        ));
+      } else if (item.status == 'Ditolak') {
+        // 3. Notifikasi untuk Siswa: Ditolak / Perlu Revisi
+        final reason = (item.catatan != null && item.catatan!.isNotEmpty)
+            ? ' Catatan: ${item.catatan}'
+            : '';
+        realNotifs.add(AppNotification(
+          id: 'rejected_${item.id}',
+          title: 'Perlu Revisi',
+          message: 'Portofolio "${item.judul}" ditolak.$reason',
+          time: item.tanggalUnggah,
+          role: 'siswa',
+          icon: Icons.cancel_rounded,
+          iconColor: const Color(0xFFDC2626),
+        ));
+      }
+    }
+
+    notifications.value = realNotifs;
   }
 
   void addPortofolio(PortofolioItem item, {bool syncToSupabase = true}) {

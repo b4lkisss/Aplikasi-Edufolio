@@ -157,63 +157,65 @@ class DetailPortofolioSiswa extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // PERAN SAYA
-              const Text(
-                'Peran Saya',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: primaryBlue,
+              // PERAN
+              if (portofolio.peran.isNotEmpty) ...[
+                const Text(
+                  'Peran',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: primaryBlue,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                portofolio.peran,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: Color(0xFF334155),
-                  height: 1.4,
+                const SizedBox(height: 6),
+                Text(
+                  portofolio.peran,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: Color(0xFF334155),
+                    height: 1.4,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 16),
+              ],
 
-              const SizedBox(height: 16),
-
-              // SKILL YANG TERLIBAT
-              const Text(
-                'Skill yang Terlibat',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: primaryBlue,
+              // SKILL
+              if (portofolio.skills.isNotEmpty) ...[
+                const Text(
+                  'Skill',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: primaryBlue,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: portofolio.skills.map((skill) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD9DFE5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      skill,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF334155),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: portofolio.skills.map((skill) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              const SizedBox(height: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD9DFE5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        skill,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF334155),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // LINK PENDUKUNG
               const Text(
